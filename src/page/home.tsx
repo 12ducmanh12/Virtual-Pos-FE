@@ -1,7 +1,7 @@
+import Container from "@/components/container";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableFooter,
   TableHead,
@@ -54,34 +54,46 @@ const invoices = [
   },
 ];
 
-export function Home() {
+function Home() {
   return (
-    <Table>
-      <TableCaption>A list of your recent invoices.</TableCaption>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[100px]">Invoice</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Method</TableHead>
-          <TableHead className="text-right">Amount</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {invoices.map((invoice) => (
-          <TableRow key={invoice.invoice}>
-            <TableCell className="font-medium">{invoice.invoice}</TableCell>
-            <TableCell>{invoice.paymentStatus}</TableCell>
-            <TableCell>{invoice.paymentMethod}</TableCell>
-            <TableCell className="text-right">{invoice.totalAmount}</TableCell>
+    <Container>
+      <Table>
+        <TableHeader className="bg-blue-400 text-white">
+          <TableRow>
+            <TableHead className="w-1/5 text-white text-center">
+              Bill Id
+            </TableHead>
+            <TableHead className="w-2/5 text-white text-center">
+              Tên cửa hàng
+            </TableHead>
+            <TableHead className="w-1/5 text-white text-center">
+              Tổng tiền
+            </TableHead>
+            <TableHead className="w-1/5 text-white text-center">
+              Qr Code
+            </TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-      <TableFooter>
-        <TableRow>
-          <TableCell colSpan={3}>Total</TableCell>
-          <TableCell className="text-right">$2,500.00</TableCell>
-        </TableRow>
-      </TableFooter>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {invoices.map((invoice) => (
+            <TableRow key={invoice.invoice}>
+              <TableCell className="font-medium text-center">
+                {invoice.invoice}
+              </TableCell>
+              <TableCell className="text-center">
+                {invoice.paymentStatus}
+              </TableCell>
+              <TableCell className="text-center">
+                {invoice.paymentMethod}
+              </TableCell>
+              <TableCell className="text-center">
+                {invoice.totalAmount}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Container>
   );
 }
+export default Home;

@@ -2,7 +2,6 @@ import { useState } from "react";
 import Container from "@/components/container";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { v4 as uuidv4 } from "uuid";
 import QRCode from "react-qr-code";
 import { Trash2 } from "lucide-react";
 import {
@@ -24,25 +23,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
 
 function CreateBill() {
   const [products, setProducts] = useState([
-    { name: "", price: 0, quantity: 1, discount: 0, total: 0 },
+    { name: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
   ]);
-  const [store, setStore] = useState("");
+  const [error, setError] = useState("");
+  const [retailerId, setRetailerId] = useState("");
   const [qrCode, setQrCode] = useState("");
-  const billID = uuidv4();
   const handleProductChange = (index: number, field: string, value: string) => {
     const updatedProducts: any = [...products];
     updatedProducts[index][field] =
-      field === "price" || field === "quantity" || field === "discount"
+      field === "unitPrice" || field === "amount" || field === "discount"
         ? parseFloat(value)
         : value;
 
     // Tính lại tổng tiền cho mỗi sản phẩm
     updatedProducts[index].total =
-      (updatedProducts[index].price - updatedProducts[index].discount) *
-      updatedProducts[index].quantity;
+      (updatedProducts[index].unitPrice - updatedProducts[index].discount) *
+      updatedProducts[index].amount;
 
     setProducts(updatedProducts);
   };
@@ -50,7 +50,7 @@ function CreateBill() {
   const addProduct = () => {
     setProducts([
       ...products,
-      { name: "", price: 0, quantity: 1, discount: 0, total: 0 },
+      { name: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
     ]);
   };
 
@@ -71,34 +71,29 @@ function CreateBill() {
   };
 
   const handleSubmit = async () => {
+    if (!retailerId) {
+      setError("Vui lòng chọn cửa hàng trước khi tạo đơn hàng.");
+      return;
+    }
+    setError("");
     const billData = {
-      store,
+      retailerId,
       products,
       totalDiscount: products.reduce(
-        (acc, product) => acc + product.discount * product.quantity,
+        (acc, product) => acc + product.discount * product.amount,
         0
       ),
-      totalAmount: products.reduce((acc, product) => acc + product.total, 0),
+      total: products.reduce((acc, product) => acc + product.total, 0),
     };
 
-    try {
-      const response = await fetch("API_ENDPOINT_URL", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(billData),
+    axios
+      .post("http://localhost:5281/api/bill/create", billData)
+      .then((response) => {
+        setQrCode(`https://sanbox/${response.data.billId}`);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
       });
-
-      if (response.ok) {
-        alert("Đơn hàng đã được gửi thành công!");
-      } else {
-        alert("Có lỗi xảy ra!");
-      }
-    } catch (error) {
-      console.error("Error submitting bill:", error);
-      alert("Không thể gửi đơn hàng.");
-    }
   };
 
   return (
@@ -107,40 +102,39 @@ function CreateBill() {
         <div className="w-3/4">
           <h4>Tạo đơn hàng</h4>
           <div className="flex flex-col gap-y-4 mt-12">
-            <div className="flex flex-col gap-y-2">
-              <Label htmlFor="email">BillId</Label>
-              <Input
-                disabled
-                type="id"
-                placeholder={billID}
-                className="bg-gray-100 text-white w-80"
-              />
-            </div>
-            <div className="flex flex-col gap-y-2">
-              <Label htmlFor="store">Lựa chọn cửa hàng</Label>
-              <Select onValueChange={(value) => setStore(value)}>
-                <SelectTrigger className="w-80">
-                  <SelectValue placeholder="Lựa chọn cửa hàng" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="coopmart">Coopmart</SelectItem>
-                    <SelectItem value="GS25">GS25</SelectItem>
-                    <SelectItem value="Thai Son">Thai Son</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col gap-y-2"></div>
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-y-2">
+                <Label htmlFor="store">Lựa chọn cửa hàng</Label>
+                <Select onValueChange={(value) => setRetailerId(value)}>
+                  <SelectTrigger className="w-80">
+                    <SelectValue placeholder="Lựa chọn cửa hàng" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="1">Coopmart</SelectItem>
+                      <SelectItem value="2">GS25</SelectItem>
+                      <SelectItem value="3">Circle K</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Hiển thị lỗi bên cạnh Select */}
+              {error && <p className="text-red-500 pt-5 text-xs">*{error}</p>}
             </div>
           </div>
-          <Table>
-            <TableHeader>
+          <Table className="mt-5">
+            <TableHeader className="bg-blue-400">
               <TableRow>
-                <TableHead className="w-3/12">Tên sản phẩm</TableHead>
-                <TableHead className="w-2/12">Đơn giá</TableHead>
-                <TableHead className="w-2/12">Số lượng</TableHead>
-                <TableHead className="w-2/12">Giảm giá</TableHead>
-                <TableHead className="w-2/12">Thành tiền</TableHead>
-                <TableHead className="w-1/12">Actions</TableHead>
+                <TableHead className="w-3/12 text-white">
+                  Tên sản phẩm
+                </TableHead>
+                <TableHead className="w-2/12 text-white">Đơn giá</TableHead>
+                <TableHead className="w-2/12 text-white">Số lượng</TableHead>
+                <TableHead className="w-2/12 text-white">Giảm giá</TableHead>
+                <TableHead className="w-2/12 text-white">Thành tiền</TableHead>
+                <TableHead className="w-1/12 text-white">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -158,9 +152,9 @@ function CreateBill() {
                   <TableCell>
                     <Input
                       type="number"
-                      value={product.price}
+                      value={product.unitPrice}
                       onChange={(e) =>
-                        handleProductChange(index, "price", e.target.value)
+                        handleProductChange(index, "unitPrice", e.target.value)
                       }
                       placeholder="Đơn giá"
                     />
@@ -168,9 +162,9 @@ function CreateBill() {
                   <TableCell>
                     <Input
                       type="number"
-                      value={product.quantity}
+                      value={product.amount}
                       onChange={(e) =>
-                        handleProductChange(index, "quantity", e.target.value)
+                        handleProductChange(index, "amount", e.target.value)
                       }
                       placeholder="Số lượng"
                     />
@@ -188,7 +182,6 @@ function CreateBill() {
                   <TableCell>{product.total.toFixed(2)}</TableCell>
                   <TableCell>
                     <Trash2
-                      // color="red"
                       onClick={() => removeProduct(index)}
                       className=" cursor-pointer text-gray-500 hover:text-red-500"
                     />
@@ -202,8 +195,7 @@ function CreateBill() {
                 <TableCell className="text-right">
                   {products
                     .reduce(
-                      (acc, product) =>
-                        acc + product.discount * product.quantity,
+                      (acc, product) => acc + product.discount * product.amount,
                       0
                     )
                     .toFixed(2)}
@@ -226,12 +218,12 @@ function CreateBill() {
             >
               Thêm sản phẩm
             </Button>
-            <Button
-              className="mt-4 bg-blue-500 text-white px-4 py-2"
-              onClick={() => setQrCode(`https://sanbox-demo/${billID}`)}
+            <button
+              className="mt-4 bg-green-500 text-white px-4 py-2"
+              onClick={handleSubmit}
             >
-              Generate QR code
-            </Button>
+              Save
+            </button>
           </div>
         </div>
         <div className="w-1/4">
@@ -265,14 +257,7 @@ function CreateBill() {
           </div>
         </div>
       </div>
-      <div>
-        <button
-          className="mt-4 bg-green-500 text-white px-4 py-2"
-          onClick={handleSubmit}
-        >
-          Save
-        </button>
-      </div>
+      <div></div>
     </Container>
   );
 }

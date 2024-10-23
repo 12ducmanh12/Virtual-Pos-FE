@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 function CreateBill() {
   const [products, setProducts] = useState([
@@ -59,16 +60,16 @@ function CreateBill() {
     setProducts(updatedProducts);
   };
 
-  const handleCopy = () => {
-    navigator.clipboard
-      .writeText(qrCode)
-      .then(() => {
-        alert("Copied to clipboard!");
-      })
-      .catch((err) => {
-        console.error("Failed to copy text: ", err);
-      });
-  };
+  // const handleCopy = () => {
+  //   navigator.clipboard
+  //     .writeText(qrCode)
+  //     .then(() => {
+  //       alert("Copied to clipboard!");
+  //     })
+  //     .catch((err) => {
+  //       console.error("Failed to copy text: ", err);
+  //     });
+  // };
 
   const handleSubmit = async () => {
     if (!retailerId) {
@@ -243,12 +244,13 @@ function CreateBill() {
                       {qrCode}
                     </p>
                   </div>
-                  <div
-                    onClick={handleCopy}
+                  <Link
+                    to={qrCode}
+                    target="_blank"
                     className="bg-gray-400 w-[20%] flex justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
                   >
-                    Copy
-                  </div>
+                    Go to
+                  </Link>
                 </div>
               </div>
             ) : (

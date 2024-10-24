@@ -3,7 +3,7 @@ import Container from "@/components/container";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import QRCode from "react-qr-code";
-import { Trash2 } from "lucide-react";
+import { RotateCcw, Trash2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -22,6 +22,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { Link } from "react-router-dom";
@@ -30,7 +36,8 @@ function CreateBill() {
   const [products, setProducts] = useState([
     { name: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
   ]);
-  const [error, setError] = useState("");
+  const [errorBranch, setErrorBranch] = useState("");
+  const [errorProduct, setErrorProduct] = useState("");
   const [retailerId, setRetailerId] = useState("");
   const [qrCode, setQrCode] = useState("");
   const handleProductChange = (index: number, field: string, value: string) => {
@@ -56,28 +63,34 @@ function CreateBill() {
     ]);
   };
 
+  const handeResetField = () => {
+    setRetailerId("");
+    setProducts([{ name: "", unitPrice: 0, amount: 1, discount: 0, total: 0 }]);
+  };
+
   const removeProduct = (index: number) => {
     const updatedProducts = products.filter((_, i) => i !== index);
     setProducts(updatedProducts);
   };
 
-  // const handleCopy = () => {
-  //   navigator.clipboard
-  //     .writeText(qrCode)
-  //     .then(() => {
-  //       alert("Copied to clipboard!");
-  //     })
-  //     .catch((err) => {
-  //       console.error("Failed to copy text: ", err);
-  //     });
-  // };
-
   const handleSubmit = async () => {
     if (!retailerId) {
-      setError("Vui lòng chọn cửa hàng trước khi tạo đơn hàng.");
+      setErrorBranch("Vui lòng chọn cửa hàng trước khi tạo đơn hàng.");
       return;
     }
-    setError("");
+
+    const hasEmptyProduct = products.some(
+      (product) =>
+        !product.name || product.unitPrice <= 0 || product.amount <= 0
+    );
+
+    if (hasEmptyProduct) {
+      setErrorProduct("Vui lòng điền đầy đủ thông tin sản phẩm trước khi lưu.");
+      return;
+    }
+    setErrorProduct("");
+    setErrorBranch("");
+
     const billData = {
       retailerId,
       products,
@@ -87,15 +100,19 @@ function CreateBill() {
       ),
       total: products.reduce((acc, product) => acc + product.total, 0),
     };
-
-    axios
-      .post("http://180.93.182.148:5000/api/bill/create", billData)
-      .then((response) => {
-        setQrCode(`https://sanbox/${response.data.billId}`);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+    console.log(billData);
+    try {
+      const response = await axios.post(
+        "http://180.93.182.148:5000/api/bill/create",
+        billData
+      );
+      setQrCode(
+        `https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${response.data.billId}`
+      );
+    } catch (error) {
+      console.error("Error:", error);
+    }
+    handeResetField();
   };
 
   return (
@@ -103,12 +120,31 @@ function CreateBill() {
       <div className="flex flex-row">
         <div className="w-3/4">
           <h4>Tạo đơn hàng</h4>
-          <div className="flex flex-col gap-y-4 mt-12">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className="mt-10 bg-sky-500 rounded-full w-fit h-fit p-3 ml-auto cursor-pointer"
+                  onClick={handeResetField}
+                >
+                  <RotateCcw className="text-white" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reset</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <div className="flex flex-col">
             <div className="flex flex-col gap-y-2"></div>
             <div className="flex items-center gap-4">
               <div className="flex flex-col gap-y-2">
                 <Label htmlFor="store">Lựa chọn cửa hàng</Label>
-                <Select onValueChange={(value) => setRetailerId(value)}>
+                <Select
+                  value={retailerId}
+                  onValueChange={(value) => setRetailerId(value)}
+                >
                   <SelectTrigger className="w-80">
                     <SelectValue placeholder="Lựa chọn cửa hàng" />
                   </SelectTrigger>
@@ -123,7 +159,9 @@ function CreateBill() {
               </div>
 
               {/* Hiển thị lỗi bên cạnh Select */}
-              {error && <p className="text-red-500 pt-5 text-xs">*{error}</p>}
+              {errorBranch && (
+                <p className="text-red-500 pt-5 text-xs">*{errorBranch}</p>
+              )}
             </div>
           </div>
           <Table className="mt-5">
@@ -213,6 +251,9 @@ function CreateBill() {
               </TableRow>
             </TableFooter>
           </Table>
+          {errorProduct && (
+            <p className="text-red-500 pt-5 text-xs">*{errorProduct}</p>
+          )}
           <div className="flex justify-between">
             <Button
               className="mt-4 bg-blue-500 text-white px-4 py-2"

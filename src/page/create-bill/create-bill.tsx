@@ -103,7 +103,7 @@ function CreateBill() {
     console.log(billData);
     try {
       const response = await axios.post(
-        "http://180.93.182.148:5000/api/bill/create",
+        "https://180.93.182.148:5000/api/bill/create",
         billData
       );
       setQrCode(

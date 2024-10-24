@@ -43,7 +43,7 @@ function Home() {
 
   useEffect(() => {
     axios
-      .get("http://180.93.182.148:5000/api/all-bill")
+      .get("https://180.93.182.148:5000/api/all-bill")
       .then((response) => {
         setData(response.data);
       })
@@ -114,17 +114,17 @@ function Home() {
                           width: "100%",
                           padding: "20px",
                         }}
-                        value={`http://sanbox/bill/${invoice.billId}`}
+                        value={`https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${invoice.billId}`}
                         viewBox={`0 0 256 256`}
                       />
                       <div className="flex mt-3">
                         <div className="border border-blue-400 px-2 py-2 w-[75%] rounded-tl-xl rounded-bl-xl">
                           <p className="block w-full whitespace-nowrap overflow-hidden text-ellipsis">
-                            {`http://sanbox/bill/${invoice.billId}`}
+                            {`https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${invoice.billId}`}
                           </p>
                         </div>
                         <Link
-                          to={`http://sanbox/bill/${invoice.billId}`}
+                          to={`https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${invoice.billId}`}
                           target="_blank"
                           className="bg-gray-400 w-[25%] flex h-10 justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
                         >

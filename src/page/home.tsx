@@ -10,7 +10,7 @@ import {
 import axios from "axios";
 import { ScanQrCode } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import QRCode from "react-qr-code";
 
 interface dataBillType {
@@ -21,6 +21,21 @@ interface dataBillType {
 function Home() {
   const [data, setData] = useState<dataBillType[]>([]);
   const [selectedBillId, setSelectedBillId] = useState<number | null>(null);
+
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setSelectedBillId(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [modalRef]);
 
   useEffect(() => {
     axios
@@ -62,7 +77,7 @@ function Home() {
                 {invoice.retailerName}
               </TableCell>
               <TableCell className="text-center">{invoice.total}</TableCell>
-              <TableCell className=" text-center flex justify-center">
+              <TableCell className="text-center relative">
                 <div
                   className="relative bg-slate-200 rounded-xl flex justify-center items-center w-32 h-8 cursor-pointer"
                   onClick={() => {
@@ -72,17 +87,22 @@ function Home() {
                   }}
                 >
                   <ScanQrCode />
-                  <p>QR Code</p>
+                  <p className="text-sm">QR Code</p>
                 </div>
+
                 {selectedBillId === invoice.billId && (
-                  <div className="absolute top-full z-10 mt-2 bg-slate-200 p-7 shadow-xl">
-                    {/* `absolute` để không ảnh hưởng đến layout */}
+                  <div
+                    ref={modalRef}
+                    className="absolute left-1/2 transform -translate-x-1/2 top-full mt-2 bg-white p-4 shadow-xl border rounded-lg z-10"
+                    style={{ minWidth: "250px" }}
+                  >
                     <QRCode
                       size={134}
                       style={{
                         height: "auto",
                         maxWidth: "100%",
                         width: "100%",
+                        padding: "20px"
                       }}
                       value={`http://sanbox/bill/${invoice.billId}`}
                       viewBox={`0 0 256 256`}
@@ -104,6 +124,7 @@ function Home() {
                   </div>
                 )}
               </TableCell>
+
             </TableRow>
           ))}
         </TableBody>

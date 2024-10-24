@@ -34,6 +34,7 @@ function CreateBill() {
   const [retailerId, setRetailerId] = useState("");
   const [qrCode, setQrCode] = useState("");
   const handleProductChange = (index: number, field: string, value: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updatedProducts: any = [...products];
     updatedProducts[index][field] =
       field === "unitPrice" || field === "amount" || field === "discount"

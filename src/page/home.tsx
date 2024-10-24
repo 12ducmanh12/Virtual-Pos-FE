@@ -24,7 +24,7 @@ function Home() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5281/api/all-bill")
+      .get("http://180.93.182.148:5000/api/all-bill")
       .then((response) => {
         setData(response.data);
       })

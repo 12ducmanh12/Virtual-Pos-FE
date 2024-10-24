@@ -88,7 +88,7 @@ function CreateBill() {
     };
 
     axios
-      .post("http://localhost:5281/api/bill/create", billData)
+      .post("http://180.93.182.148:5000/api/bill/create", billData)
       .then((response) => {
         setQrCode(`https://sanbox/${response.data.billId}`);
       })

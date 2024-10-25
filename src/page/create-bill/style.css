@@ -1,0 +1,12 @@
+.animation-icon {
+    animation: animation-icon 0.7s 1 ease;
+}
+
+@keyframes animation-icon {
+    0% {
+        left: -5px;
+    }
+    100% {
+        left: 0;
+    }
+}

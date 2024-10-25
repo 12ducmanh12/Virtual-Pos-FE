@@ -3,7 +3,8 @@ import Container from "@/components/container";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import QRCode from "react-qr-code";
-import { RotateCcw, Trash2 } from "lucide-react";
+import { ArrowLeft, RotateCcw, Trash2 } from "lucide-react";
+import "./style.css";
 import {
   Select,
   SelectContent,
@@ -30,7 +31,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function CreateBill() {
   const [products, setProducts] = useState([
@@ -40,6 +41,7 @@ function CreateBill() {
   const [errorProduct, setErrorProduct] = useState("");
   const [retailerId, setRetailerId] = useState("");
   const [qrCode, setQrCode] = useState("");
+  const navigate = useNavigate();
   const handleProductChange = (index: number, field: string, value: string) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updatedProducts: any = [...products];
@@ -103,7 +105,7 @@ function CreateBill() {
     console.log(billData);
     try {
       const response = await axios.post(
-        "https://180.93.182.148:5000/api/bill/create",
+        "http://180.93.182.148:5000/api/bill/create",
         billData
       );
       setQrCode(
@@ -114,17 +116,31 @@ function CreateBill() {
     }
     handeResetField();
   };
+  const [animationback, setAnimationback] = useState(false);
 
   return (
     <Container>
       <div className="flex flex-row">
         <div className="w-3/4">
+          <div
+            className={`${
+              animationback ? "text-gray-900 border-gray-500" : "text-gray-500 border-gray-300"
+            } flex mb-3  cursor-pointer items-center gap-x-2 p-2 rounded-lg border  w-fit`}
+            onClick={() => navigate("/")}
+            onMouseLeave={() => setAnimationback(false)}
+            onMouseMove={() => setAnimationback(true)}
+          >
+            <ArrowLeft
+              className={`${animationback ? "animation-icon" : ""} relative`}
+            />
+            <p>Quay lại danh sách</p>
+          </div>
           <h4>Tạo đơn hàng</h4>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="mt-10 bg-sky-500 rounded-full w-fit h-fit p-3 ml-auto cursor-pointer"
+                  className=" bg-sky-500 rounded-full w-fit h-fit p-3 ml-auto cursor-pointer"
                   onClick={handeResetField}
                 >
                   <RotateCcw className="text-white" />

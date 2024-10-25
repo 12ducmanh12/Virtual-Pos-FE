@@ -181,7 +181,7 @@ function CreateBill() {
             </div>
           </div>
           <Table className="mt-5">
-            <TableHeader className="bg-blue-400">
+            <TableHeader className="bg-gradient-custom">
               <TableRow>
                 <TableHead className="w-3/12 text-white">
                   Tên sản phẩm
@@ -305,7 +305,7 @@ function CreateBill() {
                   <Link
                     to={qrCode}
                     target="_blank"
-                    className="bg-gray-400 w-[20%] flex justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
+                    className="bg-gradient-custom w-[20%] flex justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
                   >
                     Go to
                   </Link>

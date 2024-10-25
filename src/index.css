@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 :root {
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
@@ -18,10 +19,6 @@ a {
     font-weight: 500;
     color: #646cff;
     text-decoration: inherit;
-}
-
-a:hover {
-    color: #535bf2;
 }
 
 h1 {
@@ -57,21 +54,21 @@ button {
 }
 
 @media (prefers-color-scheme: light) {
-     :root {
+    :root {
         color: #213547;
         background-color: #ffffff;
     }
-    a:hover {
-        color: #747bff;
-    }
+
+
     button {
         background-color: #f9f9f9;
     }
 }
 
 @layer base {
-     :root {
+    :root {
         --background: 0 0% 100%;
+        --gradient-background: linear-gradient(32deg, #8900E6 0%, #8900E6 48%, #B500FC 100%);
         --foreground: 224 71.4% 4.1%;
         --card: 0 0% 100%;
         --card-foreground: 224 71.4% 4.1%;
@@ -97,6 +94,7 @@ button {
         --chart-4: 43 74% 66%;
         --chart-5: 27 87% 67%;
     }
+
     .dark {
         --background: 224 71.4% 4.1%;
         --foreground: 210 20% 98%;
@@ -129,6 +127,7 @@ button {
     * {
         @apply border-border;
     }
+
     body {
         @apply bg-background text-foreground;
     }

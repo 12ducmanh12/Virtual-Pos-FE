@@ -60,17 +60,24 @@ function Home() {
 
   return (
     <Container>
-      <Button
-        className="flex ml-auto w-fit my-10"
-        onClick={() => navigate("/create-bill")}
-      >
-        Create Bill
-      </Button>
-      <div className="border border-gray-400 p-4 rounded-lg drop-shadow-sm">
+      <div className="flex items-baseline justify-center">
+        <h2
+          className="flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold"
+        >
+          Danh Sách Hóa Đơn
+        </h2>
+        <Button
+          className="ml-auto w-fit my-10"
+          onClick={() => navigate("/create-bill")}
+        >
+          Create Bill
+        </Button>
+      </div>
+      <div className="rounded-lg shadow-xl">
         <Table className="relative">
-          <TableHeader className="bg-blue-400 text-white rounded-lg">
+          <TableHeader className="bg-gradient-custom text-white rounded-lg">
             <TableRow className=" rounded-lg">
-              <TableHead className="w-1/12 text-white text-center font-bold"></TableHead>
+              <TableHead className="w-[3%] text-white text-center font-bold rounded-tl-lg"></TableHead>
               <TableHead className="w-2/12 text-white text-left font-bold">
                 Bill Id
               </TableHead>
@@ -80,7 +87,7 @@ function Home() {
               <TableHead className="w-3/12 text-white text-center font-bold">
                 Tổng tiền
               </TableHead>
-              <TableHead className="w-3/12 text-white text-center font-bold">
+              <TableHead className="w-3/12 text-white text-center font-bold rounded-tr-lg">
                 Qr Code
               </TableHead>
             </TableRow>
@@ -138,7 +145,7 @@ function Home() {
                           <Link
                             to={`https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${invoice.billId}`}
                             target="_blank"
-                            className="bg-gray-400 w-[25%] flex h-10 justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
+                            className="bg-gradient-custom text-white w-[25%] flex h-10 justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
                           >
                             Go to
                           </Link>
@@ -153,7 +160,7 @@ function Home() {
                   <TableRow>
                     <TableCell colSpan={5}>
                       <Table className="w-[95%] ml-auto">
-                        <TableHeader className="bg-blue-400">
+                        <TableHeader className="bg-gradient-custom">
                           <TableRow>
                             <TableHead className="text-left font-bold text-white">
                               Tên sản phẩm

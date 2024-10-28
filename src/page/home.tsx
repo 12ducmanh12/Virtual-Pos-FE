@@ -162,7 +162,7 @@ function Home() {
                       <Table className="w-[95%] ml-auto">
                         <TableHeader className="bg-gradient-custom">
                           <TableRow>
-                            <TableHead className="text-left font-bold text-white">
+                            <TableHead className="text-left font-bold text-white rounded-tl-lg">
                               Tên sản phẩm
                             </TableHead>
                             <TableHead className="text-center font-bold text-white">
@@ -174,7 +174,7 @@ function Home() {
                             <TableHead className="text-center font-bold text-white">
                               Giảm giá
                             </TableHead>
-                            <TableHead className="text-right font-bold text-white">
+                            <TableHead className="text-right font-bold text-white rounded-tr-lg">
                               Tổng tiền
                             </TableHead>
                           </TableRow>

@@ -124,7 +124,9 @@ function CreateBill() {
         <div className="w-3/4">
           <div
             className={`${
-              animationback ? "text-gray-900 border-gray-500" : "text-gray-500 border-gray-300"
+              animationback
+                ? "text-gray-900 border-gray-500"
+                : "text-gray-500 border-gray-300"
             } flex mb-3  cursor-pointer items-center gap-x-2 p-2 rounded-lg border  w-fit`}
             onClick={() => navigate("/")}
             onMouseLeave={() => setAnimationback(false)}
@@ -180,17 +182,25 @@ function CreateBill() {
               )}
             </div>
           </div>
-          <Table className="mt-5">
+          <Button
+            className="mt-4 bg-blue-500 text-white px-4 py-2"
+            onClick={addProduct}
+          >
+            Thêm sản phẩm
+          </Button>
+          <Table className="mt-4">
             <TableHeader className="bg-gradient-custom">
               <TableRow>
-                <TableHead className="w-3/12 text-white">
+                <TableHead className="w-3/12 text-white rounded-tl-lg">
                   Tên sản phẩm
                 </TableHead>
                 <TableHead className="w-2/12 text-white">Đơn giá</TableHead>
                 <TableHead className="w-2/12 text-white">Số lượng</TableHead>
                 <TableHead className="w-2/12 text-white">Giảm giá</TableHead>
                 <TableHead className="w-2/12 text-white">Thành tiền</TableHead>
-                <TableHead className="w-1/12 text-white">Actions</TableHead>
+                <TableHead className="w-1/12 text-white rounded-tr-lg">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -270,13 +280,7 @@ function CreateBill() {
           {errorProduct && (
             <p className="text-red-500 pt-5 text-xs">*{errorProduct}</p>
           )}
-          <div className="flex justify-between">
-            <Button
-              className="mt-4 bg-blue-500 text-white px-4 py-2"
-              onClick={addProduct}
-            >
-              Thêm sản phẩm
-            </Button>
+          <div className="flex justify-end">
             <button
               className="mt-4 bg-green-500 text-white px-4 py-2"
               onClick={handleSubmit}

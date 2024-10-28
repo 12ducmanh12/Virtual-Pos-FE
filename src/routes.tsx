@@ -1,5 +1,6 @@
 import Home from "./page/home";
 import CreateBill from "./page/create-bill/create-bill";
+import CreateMultiBill from "./page/create-multi-bill/create-multi-bill";
 
 const routes = [
   {
@@ -13,6 +14,12 @@ const routes = [
     title: "Create bill",
     route: "/create-bill",
     component: <CreateBill />,
+  },
+  {
+    key: "Create bill",
+    title: "Create bill",
+    route: "/create-multi-bill",
+    component: <CreateMultiBill />,
   },
 ];
 

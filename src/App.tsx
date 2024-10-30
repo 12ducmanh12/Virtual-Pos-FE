@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import routes from "./routes";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 

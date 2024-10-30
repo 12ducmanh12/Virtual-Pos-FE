@@ -123,12 +123,11 @@ function CreateBill() {
       <div className="flex flex-row">
         <div className="w-3/4">
           <div
-            className={`${
-              animationback
-                ? "text-gray-900 border-gray-500"
-                : "text-gray-500 border-gray-300"
-            } flex mb-3  cursor-pointer items-center gap-x-2 p-2 rounded-lg border  w-fit`}
-            onClick={() => navigate("/")}
+            className={`${animationback
+              ? "text-gray-900 border-gray-500"
+              : "text-gray-500 border-gray-300"
+              } flex mb-3  cursor-pointer items-center gap-x-2 p-2 rounded-lg border  w-fit`}
+            onClick={() => navigate("/list-bills")}
             onMouseLeave={() => setAnimationback(false)}
             onMouseMove={() => setAnimationback(true)}
           >
@@ -198,9 +197,7 @@ function CreateBill() {
                 <TableHead className="w-2/12 text-white">Số lượng</TableHead>
                 <TableHead className="w-2/12 text-white">Giảm giá</TableHead>
                 <TableHead className="w-2/12 text-white">Thành tiền</TableHead>
-                <TableHead className="w-1/12 text-white rounded-tr-lg">
-                  Actions
-                </TableHead>
+                <TableHead className="w-1/12 text-white rounded-tr-lg">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

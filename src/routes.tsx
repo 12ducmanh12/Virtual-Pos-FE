@@ -1,13 +1,20 @@
-import Home from "./page/home";
+import Authentication from "./page/authentication/authentication";
+import ListBills from "./page/list-bills/list-bills";
 import CreateBill from "./page/create-bill/create-bill";
 import CreateMultiBill from "./page/create-multi-bill/create-multi-bill";
 
 const routes = [
   {
-    key: "Home",
-    title: "Home",
+    key: "Authentication",
+    title: "Authentication",
     route: "/",
-    component: <Home />,
+    component: <Authentication />,
+  },
+  {
+    key: "List Bill",
+    title: "List bill",
+    route: "/list-bills",
+    component: <ListBills />,
   },
   {
     key: "Create bill",

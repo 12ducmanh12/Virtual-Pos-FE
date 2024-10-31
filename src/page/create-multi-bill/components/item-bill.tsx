@@ -4,9 +4,7 @@ function ItemBill({ billNumber, onClick, active, handleDelete }: any) {
   return (
     <div>
       <div
-        className={`flex justify-between bg-blue-300 rounded-lg pl-4 pr-2 py-2 mb-3 ${
-          active ? "border-2 border-red-500" : ""
-        } `}
+        className={`flex justify-between rounded-l-lg px-5 py-3 ${active ? "bg-white" : "bg-transparent"}`}
         onClick={onClick}
       >
         <p>Bill {billNumber}</p>

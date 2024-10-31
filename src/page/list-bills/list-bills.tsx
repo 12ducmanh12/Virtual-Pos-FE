@@ -29,18 +29,18 @@ interface productsType {
 }
 interface dataBillType {
   billId: number;
-  retailerName: string;
+  storeName: string;
   total: number;
   products: Array<productsType>;
 }
-function Home() {
+function ListBills() {
   const [data, setData] = useState<dataBillType[]>([]);
   const [expandedBillIds, setExpandedBillIds] = useState<number[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get("http://180.93.182.148:5000/api/all-bill")
+      .get("http://localhost:5281/api/all-bill")
       .then((response) => {
         setData(response.data);
       })
@@ -68,14 +68,14 @@ function Home() {
         </h2>
         <Button
           className="ml-auto w-fit my-10"
-          onClick={() => navigate("/create-bill")}
+          onClick={() => navigate("/create-multi-bill")}
         >
-          Create Bill
+          Tạo Bill
         </Button>
       </div>
-      <div className="rounded-lg shadow-xl">
+      <div className="rounded-lg shadow-xl rounded-r-lg">
         <Table className="relative">
-          <TableHeader className="bg-gradient-custom text-white rounded-lg">
+          <TableHeader className="bg-gradient-custom text-white ">
             <TableRow className=" rounded-lg">
               <TableHead className="w-[3%] text-white text-center font-bold rounded-tl-lg"></TableHead>
               <TableHead className="w-2/12 text-white text-left font-bold">
@@ -113,7 +113,7 @@ function Home() {
                     {invoice.billId}
                   </TableCell>
                   <TableCell className="text-center">
-                    {invoice.retailerName}
+                    {invoice.storeName}
                   </TableCell>
                   <TableCell className="text-center">{invoice.total}</TableCell>
                   <TableCell className="flex justify-center relative">
@@ -124,7 +124,7 @@ function Home() {
                           <p className="text-sm">QR Code</p>
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-72">
+                      <PopoverContent className="w-60">
                         <QRCode
                           size={150}
                           style={{
@@ -159,7 +159,7 @@ function Home() {
                 {expandedBillIds.includes(invoice.billId) && (
                   <TableRow>
                     <TableCell colSpan={5}>
-                      <Table className="w-[95%] ml-auto">
+                      <Table className="w-[95%] ml-auto shadow-lg">
                         <TableHeader className="bg-gradient-custom">
                           <TableRow>
                             <TableHead className="text-left font-bold text-white rounded-tl-lg">
@@ -213,4 +213,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default ListBills;

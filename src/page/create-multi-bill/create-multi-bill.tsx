@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import ItemBill from "./components/item-bill";
-import { refreshToken } from '@/utils/refreshToken';
+import { refreshToken } from "@/utils/refreshToken";
 
 interface Product {
   name: string;
@@ -205,7 +205,8 @@ function CreateMultiBill() {
     if (
       activeBillProducts.length === 0 ||
       activeBillProducts.some(
-        (product) => !product.name || product.unitPrice <= 0 || product.amount <= 0
+        (product) =>
+          !product.name || product.unitPrice <= 0 || product.amount <= 0
       )
     ) {
       setErrorProduct("Vui lòng điền đầy đủ thông tin sản phẩm trước khi lưu.");
@@ -222,7 +223,10 @@ function CreateMultiBill() {
         (acc, product) => acc + product.discount * product.amount,
         0
       ),
-      total: activeBillProducts.reduce((acc, product) => acc + product.total, 0),
+      total: activeBillProducts.reduce(
+        (acc, product) => acc + product.total,
+        0
+      ),
     };
 
     try {
@@ -239,9 +243,12 @@ function CreateMultiBill() {
       );
 
       const newQrCode = `https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${response.data.billId}`;
-      setQrCodes((prevQrCodes) => ({ ...prevQrCodes, [billIdActive]: newQrCode }));
+      setQrCodes((prevQrCodes) => ({
+        ...prevQrCodes,
+        [billIdActive]: newQrCode,
+      }));
       setQrCode(newQrCode);
-    } catch (error) {
+    } catch (error: any) {
       if (error.response?.data?.error === "Unauthorized") {
         // Thực hiện refresh token nếu lỗi Unauthorized
         await refreshToken();
@@ -259,15 +266,16 @@ function CreateMultiBill() {
         );
 
         const newQrCode = `https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${response.data.billId}`;
-        setQrCodes((prevQrCodes) => ({ ...prevQrCodes, [billIdActive]: newQrCode }));
+        setQrCodes((prevQrCodes) => ({
+          ...prevQrCodes,
+          [billIdActive]: newQrCode,
+        }));
         setQrCode(newQrCode);
       } else {
         console.error("Error:", error);
       }
     }
   };
-
-
 
   const handleAddBill = () => {
     setBill((prevBill) => [...prevBill, prevBill[prevBill.length - 1] + 1]);
@@ -285,11 +293,14 @@ function CreateMultiBill() {
       const token = localStorage.getItem("token");
 
       try {
-        const response = await axios.get("http://localhost:5281/api/retailer/get-list-retailers", {
-          headers: {
-            Authorization: `Bearer ${token}`, // Thêm token vào header
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:5281/api/retailer/get-list-retailers",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Thêm token vào header
+            },
+          }
+        );
         setRetailers(response.data);
       } catch (error) {
         console.error("Error:", error);
@@ -301,7 +312,9 @@ function CreateMultiBill() {
 
   const fetchStoresByRetailerId = async (retailerId: unknown) => {
     try {
-      const response = await axios.get(`http://localhost:5281/api/store/get-stores-by-retailerId/${retailerId}`);
+      const response = await axios.get(
+        `http://localhost:5281/api/store/get-stores-by-retailerId/${retailerId}`
+      );
       setStores(response.data); // Giả định dữ liệu trả về là mảng các cửa hàng
     } catch (error) {
       console.error("Error fetching stores:", error);
@@ -368,7 +381,10 @@ function CreateMultiBill() {
                     <SelectContent>
                       <SelectGroup>
                         {retailers.map((retailer) => (
-                          <SelectItem key={retailer.retailerId} value={retailer.retailerId.toString()}>
+                          <SelectItem
+                            key={retailer.retailerId}
+                            value={retailer.retailerId.toString()}
+                          >
                             {retailer.name}
                           </SelectItem>
                         ))}
@@ -391,7 +407,10 @@ function CreateMultiBill() {
                     <SelectContent>
                       <SelectGroup>
                         {stores.map((store) => (
-                          <SelectItem key={store.storeId} value={store.storeId.toString()}>
+                          <SelectItem
+                            key={store.storeId}
+                            value={store.storeId.toString()}
+                          >
                             {store.name}
                           </SelectItem>
                         ))}
@@ -418,7 +437,9 @@ function CreateMultiBill() {
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <Button className="mt-4" onClick={addProduct}>Thêm sản phẩm</Button>
+              <Button className="mt-4" onClick={addProduct}>
+                Thêm sản phẩm
+              </Button>
               <Table className="my-4 shadow-lg">
                 {/* Đầu bảng sản phẩm */}
                 <TableHeader className="bg-gradient-custom">
@@ -540,7 +561,9 @@ function CreateMultiBill() {
               {errorProduct && (
                 <p className="text-red-500 pt-5 text-xs">*{errorProduct}</p>
               )}
-              <Button className="float-end" onClick={handleViewQrCode}>View QR Code</Button>
+              <Button className="float-end" onClick={handleViewQrCode}>
+                View QR Code
+              </Button>
             </div>
           )}
           <div className="w-1/4 bg-white">

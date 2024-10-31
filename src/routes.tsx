@@ -7,14 +7,15 @@ const routes = [
   {
     key: "Authentication",
     title: "Authentication",
-    route: "/",
+    route: "/login",
     component: <Authentication />,
   },
   {
     key: "List Bill",
     title: "List bill",
-    route: "/list-bills",
+    route: "/",
     component: <ListBills />,
+    isProtected: true,
   },
   {
     key: "Create bill",
@@ -27,6 +28,7 @@ const routes = [
     title: "Create bill",
     route: "/create-multi-bill",
     component: <CreateMultiBill />,
+    isProtected: true,
   },
 ];
 

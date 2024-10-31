@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import "./style.css";
 
@@ -14,13 +14,12 @@ function Authentication() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-
   const toggleForm = () => {
     setIsSignIn(!isSignIn);
     setError("");
   };
 
-  const handleSignUpSubmit = (e: { preventDefault: () => void; }) => {
+  const handleSignUpSubmit = (e: { preventDefault: () => void }) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       toast({
@@ -30,7 +29,7 @@ function Authentication() {
     }
   };
 
-  const handleSignInSubmit = async (e: { preventDefault: () => void; }) => {
+  const handleSignInSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     try {
       const response = await fetch("http://localhost:5281/api/user/login", {
@@ -58,8 +57,6 @@ function Authentication() {
 
       // Redirect to the /list-bills page
       navigate("/list-bills");
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       toast({
         title: "Login Failed",
@@ -74,13 +71,19 @@ function Authentication() {
         className={`p-8 space-y-6 w-4/12 bg-white rounded-lg shadow-md items-baseline transition-height
                     ${isSignIn ? "signin-height" : "signup-height"}`}
       >
-        <h2 className={`text-3xl leading-[3.25rem] font-bold text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent
-                     transition-all duration-500`}>
+        <h2
+          className={`text-3xl leading-[3.25rem] font-bold text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent
+                     transition-all duration-500`}
+        >
           {isSignIn ? "Sign In" : "Sign Up"}
         </h2>
 
         {/* Form Sign In */}
-        <div className={`${isSignIn ? "slide-in-right" : "slide-out-left"} ${!isSignIn && "hidden"} transition-all duration-900`}>
+        <div
+          className={`${isSignIn ? "slide-in-right" : "slide-out-left"} ${
+            !isSignIn && "hidden"
+          } transition-all duration-900`}
+        >
           <form className="space-y-4" onSubmit={handleSignInSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -107,17 +110,18 @@ function Authentication() {
               />
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button
-              type="submit"
-              className="w-full button-gradient"
-            >
+            <Button type="submit" className="w-full button-gradient">
               Sign In
             </Button>
           </form>
         </div>
 
         {/* Form Sign Up */}
-        <div className={`${!isSignIn ? "slide-in-left" : "slide-out-right"} ${isSignIn && "hidden"} transition-all duration-900`}>
+        <div
+          className={`${!isSignIn ? "slide-in-left" : "slide-out-right"} ${
+            isSignIn && "hidden"
+          } transition-all duration-900`}
+        >
           <form className="space-y-4" onSubmit={handleSignUpSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -164,10 +168,7 @@ function Authentication() {
               />
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button
-              type="submit"
-              className="w-full button-gradient"
-            >
+            <Button type="submit" className="w-full button-gradient">
               Sign Up
             </Button>
           </form>

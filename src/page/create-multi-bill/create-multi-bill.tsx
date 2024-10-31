@@ -76,6 +76,7 @@ function CreateMultiBill() {
 
   const handeResetField = () => {
     setRetailerId("");
+    setStoreId("");
     setProducts({
       [billIdActive]: [
         { name: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
@@ -130,7 +131,7 @@ function CreateMultiBill() {
 
   const handleSubmit = async () => {
     // Kiểm tra nếu chưa chọn cửa hàng
-    if (!retailerId) {
+    if (!retailerId && !storeId) {
       setErrorBranch("Vui lòng chọn cửa hàng trước khi tạo đơn hàng.");
       return;
     }
@@ -197,7 +198,12 @@ function CreateMultiBill() {
     }
 
     if (!retailerId) {
-      setErrorBranch("Vui lòng chọn cửa hàng trước khi tạo đơn hàng.");
+      setErrorBranch("Vui lòng chọn nhà bán lẻ khi tạo đơn hàng.");
+      return;
+    }
+
+    if (!storeId) {
+      setErrorBranch("Vui lòng chọn cửa hàng khi tạo đơn hàng.");
       return;
     }
 
@@ -217,7 +223,7 @@ function CreateMultiBill() {
     setErrorBranch("");
 
     const billData = {
-      retailerId,
+      storeId,
       products: activeBillProducts,
       totalDiscount: activeBillProducts.reduce(
         (acc, product) => acc + product.discount * product.amount,
@@ -231,7 +237,7 @@ function CreateMultiBill() {
 
     try {
       const token = localStorage.getItem("token");
-
+      console.log(billData);
       const response = await axios.post(
         "http://localhost:5281/api/bill/import-invoice",
         billData,
@@ -248,8 +254,8 @@ function CreateMultiBill() {
         [billIdActive]: newQrCode,
       }));
       setQrCode(newQrCode);
-    } catch (error: any) {
-      if (error.response?.data?.error === "Unauthorized") {
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data?.error === "Unauthorized") {
         // Thực hiện refresh token nếu lỗi Unauthorized
         await refreshToken();
         const token = localStorage.getItem("token");
@@ -561,13 +567,11 @@ function CreateMultiBill() {
               {errorProduct && (
                 <p className="text-red-500 pt-5 text-xs">*{errorProduct}</p>
               )}
-              <Button className="float-end" onClick={handleViewQrCode}>
-                View QR Code
-              </Button>
+              <Button className="float-end" onClick={handleViewQrCode}>Tạo hóa đơn</Button>
             </div>
           )}
           <div className="w-1/4 bg-white">
-            <div className="flex flex-col justify-center px-10 pt-4">
+            <div className="flex flex-col justify-center pt-4 pr-4">
               {qrCode ? (
                 <div className="flex flex-col mt-3">
                   <QRCode
@@ -585,7 +589,7 @@ function CreateMultiBill() {
                     <Link
                       to={qrCode}
                       target="_blank"
-                      className="bg-gradient-custom w-[20%] flex justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
+                      className="bg-gradient-custom text-sm text-white w-[20%] flex justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
                     >
                       Go to
                     </Link>

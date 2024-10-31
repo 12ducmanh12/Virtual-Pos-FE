@@ -29,7 +29,7 @@ interface productsType {
 }
 interface dataBillType {
   billId: number;
-  retailerName: string;
+  storeName: string;
   total: number;
   products: Array<productsType>;
 }
@@ -113,7 +113,7 @@ function ListBills() {
                     {invoice.billId}
                   </TableCell>
                   <TableCell className="text-center">
-                    {invoice.retailerName}
+                    {invoice.storeName}
                   </TableCell>
                   <TableCell className="text-center">{invoice.total}</TableCell>
                   <TableCell className="flex justify-center relative">

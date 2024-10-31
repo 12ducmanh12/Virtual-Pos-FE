@@ -2,27 +2,27 @@ import routes from "./routes";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./utils/protected-route";
 import { useEffect, useState } from "react";
+import { useAuthStore } from "./hooks/authStore";
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // const initialAuthState = localStorage.getItem("isAuthenticated") === "true";
+  const { isAuthenticated, setIsAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const expireDate = localStorage.getItem("expireToken");
-
+    const token = localStorage.getItem("token");
+    const expireDate = localStorage.getItem("expiration");
     if (token && expireDate) {
       const now = new Date().getTime();
-      if (now < Number(expireDate)) {
+      const expirationTime = new Date(expireDate).getTime();
+      if (now < expirationTime) {
         setIsAuthenticated(true);
       } else {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("expireToken");
         setIsAuthenticated(false);
       }
     } else {
       setIsAuthenticated(false);
     }
-  }, []);
+  }, [setIsAuthenticated]);
 
   return (
     <BrowserRouter>

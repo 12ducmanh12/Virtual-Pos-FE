@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthStore } from "@/hooks/authStore";
 import "./style.css";
 
 function Authentication() {
@@ -13,6 +14,7 @@ function Authentication() {
   const [error, setError] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useAuthStore();
 
   const toggleForm = () => {
     setIsSignIn(!isSignIn);
@@ -32,7 +34,7 @@ function Authentication() {
   const handleSignInSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5281/api/user/login", {
+      const response = await fetch("https://vpos.giftzone.vn/api/user/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,13 +52,12 @@ function Authentication() {
 
       const { token, refreshToken, expiration } = await response.json();
 
-      // Save tokens and expiration in localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("expiration", expiration);
 
-      // Redirect to the /list-bills page
-      navigate("/list-bills");
+      setIsAuthenticated(true);
+      navigate("/");
     } catch (err) {
       toast({
         title: "Login Failed",

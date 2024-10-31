@@ -40,7 +40,7 @@ function ListBills() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5281/api/all-bill")
+      .get("https://vpos.giftzone.vn/api/all-bill")
       .then((response) => {
         setData(response.data);
       })
@@ -61,9 +61,7 @@ function ListBills() {
   return (
     <Container>
       <div className="flex items-baseline justify-center">
-        <h2
-          className="flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold"
-        >
+        <h2 className="flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
           Danh Sách Hóa Đơn
         </h2>
         <Button
@@ -133,17 +131,17 @@ function ListBills() {
                             width: "100%",
                             padding: "10px",
                           }}
-                          value={`https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${invoice.billId}`}
+                          value={`https://web-hddt-giftzone-omega.vercel.app/bill/${invoice.billId}`}
                           viewBox={`0 0 256 256`}
                         />
                         <div className="flex mt-3">
                           <div className="border border-blue-400 px-2 flex items-center w-[75%] rounded-tl-xl rounded-bl-xl">
                             <p className="block w-full whitespace-nowrap overflow-hidden text-ellipsis">
-                              {`https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${invoice.billId}`}
+                              {`https://web-hddt-giftzone-omega.vercel.app/bill/${invoice.billId}`}
                             </p>
                           </div>
                           <Link
-                            to={`https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${invoice.billId}`}
+                            to={`https://web-hddt-giftzone-omega.vercel.app/bill/${invoice.billId}`}
                             target="_blank"
                             className="bg-gradient-custom text-white w-[25%] flex h-10 justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
                           >

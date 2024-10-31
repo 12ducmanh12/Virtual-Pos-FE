@@ -159,22 +159,6 @@ function CreateMultiBill() {
     setErrorProduct("");
     setErrorBranch("");
 
-    // Tạo dữ liệu cho từng bill và tổng hợp thông tin để lưu
-    const billDataList: BillData[] = bill.map((billId) => {
-      const billProducts = products[billId] || [];
-      return {
-        retailerId,
-        products: billProducts,
-        totalDiscount: billProducts.reduce(
-          (acc, product) => acc + product.discount * product.amount,
-          0
-        ),
-        total: billProducts.reduce((acc, product) => acc + product.total, 0),
-      };
-    });
-
-    console.log(billDataList);
-
     // Gửi dữ liệu nếu hợp lệ (mở lại khi cần thiết)
     // try {
     //   const response = await axios.post(
@@ -237,9 +221,8 @@ function CreateMultiBill() {
 
     try {
       const token = localStorage.getItem("token");
-      console.log(billData);
       const response = await axios.post(
-        "http://localhost:5281/api/bill/import-invoice",
+        "https://vpos.giftzone.vn/api/bill/import-invoice",
         billData,
         {
           headers: {
@@ -248,21 +231,24 @@ function CreateMultiBill() {
         }
       );
 
-      const newQrCode = `https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${response.data.billId}`;
+      const newQrCode = `https://web-hddt-giftzone-omega.vercel.app/bill/${response.data.billId}`;
       setQrCodes((prevQrCodes) => ({
         ...prevQrCodes,
         [billIdActive]: newQrCode,
       }));
       setQrCode(newQrCode);
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.data?.error === "Unauthorized") {
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.data?.error === "Unauthorized"
+      ) {
         // Thực hiện refresh token nếu lỗi Unauthorized
         await refreshToken();
         const token = localStorage.getItem("token");
 
         // Gọi lại API sau khi refresh token thành công
         const response = await axios.post(
-          "http://localhost:5281/api/bill/import-invoice",
+          "https://vpos.giftzone.vn/api/bill/import-invoice",
           billData,
           {
             headers: {
@@ -271,7 +257,7 @@ function CreateMultiBill() {
           }
         );
 
-        const newQrCode = `https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${response.data.billId}`;
+        const newQrCode = `https://web-hddt-giftzone-omega.vercel.app/bill/${response.data.billId}`;
         setQrCodes((prevQrCodes) => ({
           ...prevQrCodes,
           [billIdActive]: newQrCode,
@@ -300,7 +286,7 @@ function CreateMultiBill() {
 
       try {
         const response = await axios.get(
-          "http://localhost:5281/api/retailer/get-list-retailers",
+          "https://vpos.giftzone.vn/api/retailer/get-list-retailers",
           {
             headers: {
               Authorization: `Bearer ${token}`, // Thêm token vào header
@@ -319,7 +305,7 @@ function CreateMultiBill() {
   const fetchStoresByRetailerId = async (retailerId: unknown) => {
     try {
       const response = await axios.get(
-        `http://localhost:5281/api/store/get-stores-by-retailerId/${retailerId}`
+        `https://vpos.giftzone.vn/api/store/get-stores-by-retailerId/${retailerId}`
       );
       setStores(response.data); // Giả định dữ liệu trả về là mảng các cửa hàng
     } catch (error) {
@@ -342,7 +328,7 @@ function CreateMultiBill() {
       <div className="flex justify-between items-center my-10">
         <div
           className={`text-white flex cursor-pointer items-center gap-x-2 p-2 rounded-lg border w-fit bg-gradient-custom`}
-          onClick={() => navigate("/list-bills")}
+          onClick={() => navigate("/")}
           onMouseLeave={() => setAnimationback(false)}
           onMouseMove={() => setAnimationback(true)}
         >
@@ -364,7 +350,7 @@ function CreateMultiBill() {
               active={item === billIdActive}
             />
           ))}
-          <Button className="w-1/2 mt-6 w-fit" onClick={handleAddBill}>
+          <Button className="w-1/2 mt-6" onClick={handleAddBill}>
             <SquarePlus strokeWidth={1.5} /> Thêm Bill
           </Button>
         </div>
@@ -567,7 +553,9 @@ function CreateMultiBill() {
               {errorProduct && (
                 <p className="text-red-500 pt-5 text-xs">*{errorProduct}</p>
               )}
-              <Button className="float-end" onClick={handleViewQrCode}>Tạo hóa đơn</Button>
+              <Button className="float-end" onClick={handleViewQrCode}>
+                Tạo hóa đơn
+              </Button>
             </div>
           )}
           <div className="w-1/4 bg-white">

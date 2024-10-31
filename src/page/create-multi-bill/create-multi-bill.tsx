@@ -40,13 +40,6 @@ interface Product {
   total: number;
 }
 
-interface BillData {
-  retailerId: string;
-  products: Product[];
-  totalDiscount: number;
-  total: number;
-}
-
 interface Retailer {
   retailerId: number;
   name: string;

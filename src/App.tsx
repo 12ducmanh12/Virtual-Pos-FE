@@ -1,7 +1,7 @@
 import routes from "./routes";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./utils/protected-route";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuthStore } from "./hooks/authStore";
 
 const App: React.FC = () => {

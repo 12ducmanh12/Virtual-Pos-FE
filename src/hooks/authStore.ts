@@ -10,9 +10,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: (() => {
     const token = localStorage.getItem("token");
     const expiration = localStorage.getItem("expiration");
-    return token && expiration && new Date().getTime() < new Date(expiration).getTime();
+    return !!(token && expiration && new Date().getTime() < new Date(expiration).getTime());
   })(),
-  
+
   setIsAuthenticated: (value: boolean) => {
     set({ isAuthenticated: value });
     if (!value) {

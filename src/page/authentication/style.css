@@ -1,0 +1,109 @@
+/* Slide in from the left for initial sign-in form load */
+.slide-in-right {
+    animation: slideInRight 0.5s forwards;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Slide out to the right for hiding sign-in form */
+.slide-out-left {
+    animation: slideOutLeft 0.5s forwards;
+}
+
+@keyframes slideOutLeft {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Slide in from the right for the sign-up form */
+.slide-in-left {
+    animation: slideInLeft 0.5s forwards;
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Slide out to the left for hiding sign-up form */
+.slide-out-right {
+    animation: slideOutRight 0.5s forwards;
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+}
+
+/* Set a default height with smooth transition */
+.transition-height {
+    transition: height 0.5s ease-in-out;
+    overflow: hidden;
+}
+
+/* Max height classes for each form */
+.signin-height {
+    height: 400px;
+    /* Adjust to fit Sign In form height */
+}
+
+.signup-height {
+    height: 550px;
+    /* Adjust to fit Sign Up form height */
+}
+
+.bg-custom {
+    background-image: url('/bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.button-gradient {
+    background: linear-gradient(to right, #F21472, #6C24F6);
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.button-gradient:hover {
+    background: linear-gradient(to right, #6C24F6, #F21472);
+}

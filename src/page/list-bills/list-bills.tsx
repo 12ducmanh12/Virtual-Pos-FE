@@ -29,18 +29,18 @@ interface productsType {
 }
 interface dataBillType {
   billId: number;
-  retailerName: string;
+  storeName: string;
   total: number;
   products: Array<productsType>;
 }
-function Home() {
+function ListBills() {
   const [data, setData] = useState<dataBillType[]>([]);
   const [expandedBillIds, setExpandedBillIds] = useState<number[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get("http://180.93.182.148:5000/api/all-bill")
+      .get("https://vpos.giftzone.vn/api/all-bill")
       .then((response) => {
         setData(response.data);
       })
@@ -61,21 +61,19 @@ function Home() {
   return (
     <Container>
       <div className="flex items-baseline justify-center">
-        <h2
-          className="flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold"
-        >
+        <h2 className="flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
           Danh Sách Hóa Đơn
         </h2>
         <Button
           className="ml-auto w-fit my-10"
-          onClick={() => navigate("/create-bill")}
+          onClick={() => navigate("/create-multi-bill")}
         >
-          Create Bill
+          Tạo Bill
         </Button>
       </div>
-      <div className="rounded-lg shadow-xl">
+      <div className="rounded-lg shadow-xl rounded-r-lg">
         <Table className="relative">
-          <TableHeader className="bg-gradient-custom text-white rounded-lg">
+          <TableHeader className="bg-gradient-custom text-white ">
             <TableRow className=" rounded-lg">
               <TableHead className="w-[3%] text-white text-center font-bold rounded-tl-lg"></TableHead>
               <TableHead className="w-2/12 text-white text-left font-bold">
@@ -113,7 +111,7 @@ function Home() {
                     {invoice.billId}
                   </TableCell>
                   <TableCell className="text-center">
-                    {invoice.retailerName}
+                    {invoice.storeName}
                   </TableCell>
                   <TableCell className="text-center">{invoice.total}</TableCell>
                   <TableCell className="flex justify-center relative">
@@ -124,7 +122,7 @@ function Home() {
                           <p className="text-sm">QR Code</p>
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-72">
+                      <PopoverContent className="w-60">
                         <QRCode
                           size={150}
                           style={{
@@ -133,17 +131,17 @@ function Home() {
                             width: "100%",
                             padding: "10px",
                           }}
-                          value={`https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${invoice.billId}`}
+                          value={`https://web-hddt-giftzone-omega.vercel.app/bill/${invoice.billId}`}
                           viewBox={`0 0 256 256`}
                         />
                         <div className="flex mt-3">
                           <div className="border border-blue-400 px-2 flex items-center w-[75%] rounded-tl-xl rounded-bl-xl">
                             <p className="block w-full whitespace-nowrap overflow-hidden text-ellipsis">
-                              {`https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${invoice.billId}`}
+                              {`https://web-hddt-giftzone-omega.vercel.app/bill/${invoice.billId}`}
                             </p>
                           </div>
                           <Link
-                            to={`https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${invoice.billId}`}
+                            to={`https://web-hddt-giftzone-omega.vercel.app/bill/${invoice.billId}`}
                             target="_blank"
                             className="bg-gradient-custom text-white w-[25%] flex h-10 justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
                           >
@@ -159,7 +157,7 @@ function Home() {
                 {expandedBillIds.includes(invoice.billId) && (
                   <TableRow>
                     <TableCell colSpan={5}>
-                      <Table className="w-[95%] ml-auto">
+                      <Table className="w-[95%] ml-auto shadow-lg">
                         <TableHeader className="bg-gradient-custom">
                           <TableRow>
                             <TableHead className="text-left font-bold text-white rounded-tl-lg">
@@ -213,4 +211,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default ListBills;

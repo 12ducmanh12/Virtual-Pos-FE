@@ -1,7 +1,5 @@
-import { useState } from "react";
-import Container from "@/components/container";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import QRCode from "react-qr-code";
 import { ArrowLeft, RotateCcw, SquarePlus, Trash2 } from "lucide-react";
 import "./style.css";
@@ -32,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import ItemBill from "./components/item-bill";
+import { refreshToken } from "@/utils/refreshToken";
 
 interface Product {
   name: string;
@@ -47,15 +46,29 @@ interface BillData {
   totalDiscount: number;
   total: number;
 }
+
+interface Retailer {
+  retailerId: number;
+  name: string;
+}
+
+interface Store {
+  storeId: number;
+  name: string;
+}
 function CreateMultiBill() {
+  const [qrCodes, setQrCodes] = useState<{ [key: number]: string }>({});
   const [products, setProducts] = useState<{ [key: number]: Product[] }>({});
   const [errorBranch, setErrorBranch] = useState<string>("");
   const [errorProduct, setErrorProduct] = useState<string>("");
   const [retailerId, setRetailerId] = useState<string>("");
+  const [storeId, setStoreId] = useState<string>("");
   const [animationback, setAnimationback] = useState(false);
   const [qrCode, setQrCode] = useState<string>("");
   const [bill, setBill] = useState<number[]>([1]);
   const [billIdActive, setBillIdActive] = useState<number>(1);
+  const [retailers, setRetailers] = useState<Retailer[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
   const navigate = useNavigate();
   const activeProducts = products[billIdActive] || [
     { name: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
@@ -63,6 +76,7 @@ function CreateMultiBill() {
 
   const handeResetField = () => {
     setRetailerId("");
+    setStoreId("");
     setProducts({
       [billIdActive]: [
         { name: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
@@ -117,7 +131,7 @@ function CreateMultiBill() {
 
   const handleSubmit = async () => {
     // Kiểm tra nếu chưa chọn cửa hàng
-    if (!retailerId) {
+    if (!retailerId && !storeId) {
       setErrorBranch("Vui lòng chọn cửa hàng trước khi tạo đơn hàng.");
       return;
     }
@@ -145,22 +159,6 @@ function CreateMultiBill() {
     setErrorProduct("");
     setErrorBranch("");
 
-    // Tạo dữ liệu cho từng bill và tổng hợp thông tin để lưu
-    const billDataList: BillData[] = bill.map((billId) => {
-      const billProducts = products[billId] || [];
-      return {
-        retailerId,
-        products: billProducts,
-        totalDiscount: billProducts.reduce(
-          (acc, product) => acc + product.discount * product.amount,
-          0
-        ),
-        total: billProducts.reduce((acc, product) => acc + product.total, 0),
-      };
-    });
-
-    console.log(billDataList);
-
     // Gửi dữ liệu nếu hợp lệ (mở lại khi cần thiết)
     // try {
     //   const response = await axios.post(
@@ -177,6 +175,100 @@ function CreateMultiBill() {
     // }
   };
 
+  const handleViewQrCode = async () => {
+    if (qrCodes[billIdActive]) {
+      setQrCode(qrCodes[billIdActive]);
+      return;
+    }
+
+    if (!retailerId) {
+      setErrorBranch("Vui lòng chọn nhà bán lẻ khi tạo đơn hàng.");
+      return;
+    }
+
+    if (!storeId) {
+      setErrorBranch("Vui lòng chọn cửa hàng khi tạo đơn hàng.");
+      return;
+    }
+
+    const activeBillProducts = products[billIdActive] || [];
+    if (
+      activeBillProducts.length === 0 ||
+      activeBillProducts.some(
+        (product) =>
+          !product.name || product.unitPrice <= 0 || product.amount <= 0
+      )
+    ) {
+      setErrorProduct("Vui lòng điền đầy đủ thông tin sản phẩm trước khi lưu.");
+      return;
+    }
+
+    setErrorProduct("");
+    setErrorBranch("");
+
+    const billData = {
+      storeId,
+      products: activeBillProducts,
+      totalDiscount: activeBillProducts.reduce(
+        (acc, product) => acc + product.discount * product.amount,
+        0
+      ),
+      total: activeBillProducts.reduce(
+        (acc, product) => acc + product.total,
+        0
+      ),
+    };
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        "https://vpos.giftzone.vn/api/bill/import-invoice",
+        billData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const newQrCode = `https://web-hddt-giftzone-omega.vercel.app/bill/${response.data.billId}`;
+      setQrCodes((prevQrCodes) => ({
+        ...prevQrCodes,
+        [billIdActive]: newQrCode,
+      }));
+      setQrCode(newQrCode);
+    } catch (error) {
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.data?.error === "Unauthorized"
+      ) {
+        // Thực hiện refresh token nếu lỗi Unauthorized
+        await refreshToken();
+        const token = localStorage.getItem("token");
+
+        // Gọi lại API sau khi refresh token thành công
+        const response = await axios.post(
+          "https://vpos.giftzone.vn/api/bill/import-invoice",
+          billData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const newQrCode = `https://web-hddt-giftzone-omega.vercel.app/bill/${response.data.billId}`;
+        setQrCodes((prevQrCodes) => ({
+          ...prevQrCodes,
+          [billIdActive]: newQrCode,
+        }));
+        setQrCode(newQrCode);
+      } else {
+        console.error("Error:", error);
+      }
+    }
+  };
+
   const handleAddBill = () => {
     setBill((prevBill) => [...prevBill, prevBill[prevBill.length - 1] + 1]);
   };
@@ -188,32 +280,67 @@ function CreateMultiBill() {
     });
   };
 
+  useEffect(() => {
+    const fetchRetailers = async () => {
+      const token = localStorage.getItem("token");
+
+      try {
+        const response = await axios.get(
+          "https://vpos.giftzone.vn/api/retailer/get-list-retailers",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Thêm token vào header
+            },
+          }
+        );
+        setRetailers(response.data);
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+
+    fetchRetailers();
+  }, []);
+
+  const fetchStoresByRetailerId = async (retailerId: unknown) => {
+    try {
+      const response = await axios.get(
+        `https://vpos.giftzone.vn/api/store/get-stores-by-retailerId/${retailerId}`
+      );
+      setStores(response.data); // Giả định dữ liệu trả về là mảng các cửa hàng
+    } catch (error) {
+      console.error("Error fetching stores:", error);
+      setErrorBranch("Không thể lấy danh sách cửa hàng.");
+    }
+  };
+
+  useEffect(() => {
+    // Khi chuyển sang bill khác, lấy mã QR đã lưu (nếu có) và đặt vào qrCode
+    if (qrCodes[billIdActive]) {
+      setQrCode(qrCodes[billIdActive]);
+    } else {
+      setQrCode(""); // Xóa mã QR nếu chưa được tạo cho bill này
+    }
+  }, [billIdActive, qrCodes]);
+
   return (
-    <Container>
-      <div
-        className={`${
-          animationback
-            ? "text-gray-900 border-gray-500"
-            : "text-gray-500 border-gray-300"
-        } flex mb-3  cursor-pointer items-center gap-x-2 p-2 rounded-lg border  w-fit`}
-        onClick={() => navigate("/")}
-        onMouseLeave={() => setAnimationback(false)}
-        onMouseMove={() => setAnimationback(true)}
-      >
-        <ArrowLeft
-          className={`${animationback ? "animation-icon" : ""} relative`}
-        />
-        <p>Quay lại danh sách</p>
-      </div>
-      <div className="flex border border-gray-400">
-        <div className="w-2/12 pl-3">Bill</div>
-        <div className="w-10/12 flex justify-between px-10">
-          <p>Tạo sản phẩm</p>
-          <Button onClick={handleSubmit}>Save</Button>
+    <div className="bg-[#f9f0ff] h-screen px-4 py-4 xl:max-w-[1920px] w-full mx-auto xl:px-20">
+      <div className="flex justify-between items-center my-10">
+        <div
+          className={`text-white flex cursor-pointer items-center gap-x-2 p-2 rounded-lg border w-fit bg-gradient-custom`}
+          onClick={() => navigate("/")}
+          onMouseLeave={() => setAnimationback(false)}
+          onMouseMove={() => setAnimationback(true)}
+        >
+          <ArrowLeft
+            className={`${animationback ? "animation-icon" : ""} relative`}
+          />
+          <p>Quay lại danh sách</p>
         </div>
+        <Button onClick={handleSubmit}>Save</Button>
       </div>
       <div className="flex justify-between">
-        <div className="w-2/12 border-r border-gray-500 flex flex-col px-3 pt-4">
+        <div className="w-2/12 flex flex-col rounded-lg">
           {bill.map((item) => (
             <ItemBill
               key={item}
@@ -223,28 +350,62 @@ function CreateMultiBill() {
               active={item === billIdActive}
             />
           ))}
-          <Button className="w-1/2 mt-2" onClick={handleAddBill}>
+          <Button className="w-1/2 mt-6" onClick={handleAddBill}>
             <SquarePlus strokeWidth={1.5} /> Thêm Bill
           </Button>
         </div>
-        <div className="w-10/12 flex px-8">
+        <div className="w-10/12 flex">
           {billIdActive && (
-            <div className="w-3/4">
-              <div className="flex justify-between items-center my-4">
-                <div className="flex flex-col items-center gap-4">
-                  <Label htmlFor="store">Lựa chọn cửa hàng</Label>
+            <div className="w-3/4 pt-4 pb-4 px-6 bg-white rounded-r-lg">
+              <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center gap-[4.5rem]">
                   <Select
                     value={retailerId}
-                    onValueChange={(value) => setRetailerId(value)}
+                    onValueChange={(value) => {
+                      setRetailerId(value);
+                      // Gọi API để lấy danh sách cửa hàng khi có lựa chọn
+                      fetchStoresByRetailerId(value);
+                    }}
                   >
-                    <SelectTrigger className="w-80">
+                    <SelectTrigger className="w-[190px] mt-4">
+                      <SelectValue placeholder="Lựa chọn nhà bán lẻ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {retailers.map((retailer) => (
+                          <SelectItem
+                            key={retailer.retailerId}
+                            value={retailer.retailerId.toString()}
+                          >
+                            {retailer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    disabled={!retailerId}
+                    value={storeId}
+                    onValueChange={(value) => {
+                      setStoreId(value);
+                      // Gọi API để lấy danh sách cửa hàng khi có lựa chọn
+                      fetchStoresByRetailerId(value);
+                    }}
+                  >
+                    <SelectTrigger className="w-[190px] mt-4">
                       <SelectValue placeholder="Lựa chọn cửa hàng" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectItem value="1">Coopmart</SelectItem>
-                        <SelectItem value="2">GS25</SelectItem>
-                        <SelectItem value="3">Circle K</SelectItem>
+                        {stores.map((store) => (
+                          <SelectItem
+                            key={store.storeId}
+                            value={store.storeId.toString()}
+                          >
+                            {store.name}
+                          </SelectItem>
+                        ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
@@ -256,7 +417,7 @@ function CreateMultiBill() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div
-                        className=" bg-sky-500 rounded-full w-fit h-fit p-3 ml-auto cursor-pointer"
+                        className="bg-sky-500 rounded-full w-fit h-fit p-3 ml-auto cursor-pointer"
                         onClick={handeResetField}
                       >
                         <RotateCcw className="text-white" />
@@ -268,8 +429,10 @@ function CreateMultiBill() {
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <Button onClick={addProduct}>Thêm sản phẩm</Button>
-              <Table className="mt-4">
+              <Button className="mt-4" onClick={addProduct}>
+                Thêm sản phẩm
+              </Button>
+              <Table className="my-4 shadow-lg">
                 {/* Đầu bảng sản phẩm */}
                 <TableHeader className="bg-gradient-custom">
                   <TableRow>
@@ -390,11 +553,13 @@ function CreateMultiBill() {
               {errorProduct && (
                 <p className="text-red-500 pt-5 text-xs">*{errorProduct}</p>
               )}
+              <Button className="float-end" onClick={handleViewQrCode}>
+                Tạo hóa đơn
+              </Button>
             </div>
           )}
-          <div className="w-1/4">
-            <div className="flex flex-col justify-center px-10 mt-[20%]">
-              <h4 className="text-center">Qr code</h4>
+          <div className="w-1/4 bg-white">
+            <div className="flex flex-col justify-center pt-4 pr-4">
               {qrCode ? (
                 <div className="flex flex-col mt-3">
                   <QRCode
@@ -412,7 +577,7 @@ function CreateMultiBill() {
                     <Link
                       to={qrCode}
                       target="_blank"
-                      className="bg-gradient-custom w-[20%] flex justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
+                      className="bg-gradient-custom text-sm text-white w-[20%] flex justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
                     >
                       Go to
                     </Link>
@@ -425,7 +590,7 @@ function CreateMultiBill() {
           </div>
         </div>
       </div>
-    </Container>
+    </div>
   );
 }
 

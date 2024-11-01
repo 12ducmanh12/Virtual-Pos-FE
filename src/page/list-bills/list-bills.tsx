@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import axios from "axios";
-import { ChevronDown, ChevronRight, ScanQrCode } from "lucide-react";
+import { ChevronDown, ChevronRight, ScanQrCode, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
@@ -31,6 +31,7 @@ interface dataBillType {
   billId: number;
   storeName: string;
   total: number;
+  maEinvoice: string;
   products: Array<productsType>;
 }
 function ListBills() {
@@ -43,6 +44,7 @@ function ListBills() {
       .get("http://localhost:5281/api/all-bill")
       .then((response) => {
         setData(response.data);
+        console.log(data);
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -118,12 +120,18 @@ function ListBills() {
                   <TableCell className="text-center">{invoice.total}</TableCell>
                   <TableCell className="flex justify-center relative">
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline">
-                          <ScanQrCode />
-                          <p className="text-sm">QR Code</p>
-                        </Button>
-                      </PopoverTrigger>
+                      <div className="flex justify-between items-center">
+                        <PopoverTrigger asChild>
+                          <Button variant="outline">
+                            <ScanQrCode />
+                            <p className="text-sm">QR Code</p>
+                          </Button>
+                        </PopoverTrigger>
+                        <Trash2
+                          // onClick={() => removeProduct(index)}
+                          className="cursor-pointer text-black hover:text-red-700 ml-7"
+                        />
+                      </div>
                       <PopoverContent className="w-60">
                         <QRCode
                           size={150}

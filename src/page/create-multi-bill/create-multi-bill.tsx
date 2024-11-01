@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import QRCode from "react-qr-code";
-import { ArrowLeft, RotateCcw, SquarePlus, Trash2 } from "lucide-react";
+import { ArrowLeft, RotateCcw, SquarePlus, Trash2, ScanQrCode } from "lucide-react";
 import "./style.css";
 import {
   Select,
@@ -73,6 +73,8 @@ function CreateMultiBill() {
   const activeProducts = products[billIdActive] || [
     { name: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
   ];
+  const [loading, setLoading] = useState(false);
+
 
   const handeResetField = () => {
     setRetailerId("");
@@ -232,8 +234,8 @@ function CreateMultiBill() {
     };
 
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
-      console.log(billData);
       const response = await axios.post(
         "http://localhost:5281/api/bill/import-invoice",
         billData,
@@ -247,6 +249,7 @@ function CreateMultiBill() {
       const newQrCode = `https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${response.data.billId}`;
       setQrCodes((prevQrCodes) => ({ ...prevQrCodes, [billIdActive]: newQrCode }));
       setQrCode(newQrCode);
+      setLoading(false);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.data?.error === "Unauthorized") {
         // Thực hiện refresh token nếu lỗi Unauthorized
@@ -554,6 +557,7 @@ function CreateMultiBill() {
               {qrCode ? (
                 <div className="flex flex-col mt-3">
                   <QRCode
+                    className="mt-3"
                     size={256}
                     style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                     value={qrCode}
@@ -575,7 +579,11 @@ function CreateMultiBill() {
                   </div>
                 </div>
               ) : (
-                <></>
+                <div className="flex items-center justify-center mt-3">
+                  <ScanQrCode
+                    className={`w-[100%] h-[100%] mt-3 ${loading ? "animate-colorChange" : "text-black"}`}
+                  />
+                </div>
               )}
             </div>
           </div>

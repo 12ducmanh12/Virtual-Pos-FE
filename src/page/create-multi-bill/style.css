@@ -1,0 +1,15 @@
+@keyframes colorChange {
+    0% {
+      color: black;
+    }
+    50% {
+      color: #808080; /* Gray */
+    }
+    100% {
+      color: black;
+    }
+  }
+  
+  .animate-colorChange {
+    animation: colorChange 1s ease-in-out infinite;
+  }

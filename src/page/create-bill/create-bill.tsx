@@ -102,7 +102,6 @@ function CreateBill() {
       ),
       total: products.reduce((acc, product) => acc + product.total, 0),
     };
-    console.log(billData);
     try {
       const response = await axios.post(
         "http://180.93.182.148:5000/api/bill/create",

@@ -30,20 +30,15 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import ItemBill from "./components/item-bill";
-import { refreshToken } from '@/utils/refreshToken';
+import { refreshToken } from "@/utils/refreshToken";
+import { baseUrl } from "@/constants/constant";
+import { webHddtUrl } from "@/constants/constant";
 
 interface Product {
   name: string;
   unitPrice: number;
   amount: number;
   discount: number;
-  total: number;
-}
-
-interface BillData {
-  retailerId: string;
-  products: Product[];
-  totalDiscount: number;
   total: number;
 }
 
@@ -161,22 +156,6 @@ function CreateMultiBill() {
     setErrorProduct("");
     setErrorBranch("");
 
-    // Tạo dữ liệu cho từng bill và tổng hợp thông tin để lưu
-    const billDataList: BillData[] = bill.map((billId) => {
-      const billProducts = products[billId] || [];
-      return {
-        retailerId,
-        products: billProducts,
-        totalDiscount: billProducts.reduce(
-          (acc, product) => acc + product.discount * product.amount,
-          0
-        ),
-        total: billProducts.reduce((acc, product) => acc + product.total, 0),
-      };
-    });
-
-    console.log(billDataList);
-
     // Gửi dữ liệu nếu hợp lệ (mở lại khi cần thiết)
     // try {
     //   const response = await axios.post(
@@ -213,7 +192,8 @@ function CreateMultiBill() {
     if (
       activeBillProducts.length === 0 ||
       activeBillProducts.some(
-        (product) => !product.name || product.unitPrice <= 0 || product.amount <= 0
+        (product) =>
+          !product.name || product.unitPrice <= 0 || product.amount <= 0
       )
     ) {
       setErrorProduct("Vui lòng điền đầy đủ thông tin sản phẩm trước khi lưu.");
@@ -230,14 +210,17 @@ function CreateMultiBill() {
         (acc, product) => acc + product.discount * product.amount,
         0
       ),
-      total: activeBillProducts.reduce((acc, product) => acc + product.total, 0),
+      total: activeBillProducts.reduce(
+        (acc, product) => acc + product.total,
+        0
+      ),
     };
 
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:5281/api/bill/import-invoice",
+        `${baseUrl}/api/bill/import-invoice`,
         billData,
         {
           headers: {
@@ -246,19 +229,25 @@ function CreateMultiBill() {
         }
       );
 
-      const newQrCode = `https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${response.data.billId}`;
-      setQrCodes((prevQrCodes) => ({ ...prevQrCodes, [billIdActive]: newQrCode }));
+      const newQrCode = `${webHddtUrl}/${response.data.billId}`;
+      setQrCodes((prevQrCodes) => ({
+        ...prevQrCodes,
+        [billIdActive]: newQrCode,
+      }));
       setQrCode(newQrCode);
       setLoading(false);
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.data?.error === "Unauthorized") {
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.data?.error === "Unauthorized"
+      ) {
         // Thực hiện refresh token nếu lỗi Unauthorized
         await refreshToken();
         const token = localStorage.getItem("token");
 
         // Gọi lại API sau khi refresh token thành công
         const response = await axios.post(
-          "http://localhost:5281/api/bill/import-invoice",
+          `${baseUrl}/api/bill/import-invoice`,
           billData,
           {
             headers: {
@@ -267,16 +256,17 @@ function CreateMultiBill() {
           }
         );
 
-        const newQrCode = `https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${response.data.billId}`;
-        setQrCodes((prevQrCodes) => ({ ...prevQrCodes, [billIdActive]: newQrCode }));
+        const newQrCode = `${webHddtUrl}/${response.data.billId}`;
+        setQrCodes((prevQrCodes) => ({
+          ...prevQrCodes,
+          [billIdActive]: newQrCode,
+        }));
         setQrCode(newQrCode);
       } else {
         console.error("Error:", error);
       }
     }
   };
-
-
 
   const handleAddBill = () => {
     setBill((prevBill) => [...prevBill, prevBill[prevBill.length - 1] + 1]);
@@ -294,11 +284,14 @@ function CreateMultiBill() {
       const token = localStorage.getItem("token");
 
       try {
-        const response = await axios.get("http://localhost:5281/api/retailer/get-list-retailers", {
-          headers: {
-            Authorization: `Bearer ${token}`, // Thêm token vào header
-          },
-        });
+        const response = await axios.get(
+          `${baseUrl}/api/retailer/get-list-retailers`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Thêm token vào header
+            },
+          }
+        );
         setRetailers(response.data);
       } catch (error) {
         console.error("Error:", error);
@@ -310,7 +303,9 @@ function CreateMultiBill() {
 
   const fetchStoresByRetailerId = async (retailerId: unknown) => {
     try {
-      const response = await axios.get(`http://localhost:5281/api/store/get-stores-by-retailerId/${retailerId}`);
+      const response = await axios.get(
+        `${baseUrl}/api/store/get-stores-by-retailerId/${retailerId}`
+      );
       setStores(response.data); // Giả định dữ liệu trả về là mảng các cửa hàng
     } catch (error) {
       console.error("Error fetching stores:", error);
@@ -332,7 +327,7 @@ function CreateMultiBill() {
       <div className="flex justify-between items-center my-10">
         <div
           className={`text-white flex cursor-pointer items-center gap-x-2 p-2 rounded-lg border w-fit bg-gradient-custom`}
-          onClick={() => navigate("/list-bills")}
+          onClick={() => navigate("/")}
           onMouseLeave={() => setAnimationback(false)}
           onMouseMove={() => setAnimationback(true)}
         >
@@ -354,7 +349,7 @@ function CreateMultiBill() {
               active={item === billIdActive}
             />
           ))}
-          <Button className="w-1/2 mt-6 w-fit" onClick={handleAddBill}>
+          <Button className="w-1/2 mt-6" onClick={handleAddBill}>
             <SquarePlus strokeWidth={1.5} /> Thêm Bill
           </Button>
         </div>
@@ -377,7 +372,10 @@ function CreateMultiBill() {
                     <SelectContent>
                       <SelectGroup>
                         {retailers.map((retailer) => (
-                          <SelectItem key={retailer.retailerId} value={retailer.retailerId.toString()}>
+                          <SelectItem
+                            key={retailer.retailerId}
+                            value={retailer.retailerId.toString()}
+                          >
                             {retailer.name}
                           </SelectItem>
                         ))}
@@ -400,7 +398,10 @@ function CreateMultiBill() {
                     <SelectContent>
                       <SelectGroup>
                         {stores.map((store) => (
-                          <SelectItem key={store.storeId} value={store.storeId.toString()}>
+                          <SelectItem
+                            key={store.storeId}
+                            value={store.storeId.toString()}
+                          >
                             {store.name}
                           </SelectItem>
                         ))}
@@ -427,7 +428,9 @@ function CreateMultiBill() {
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <Button className="mt-4" onClick={addProduct}>Thêm sản phẩm</Button>
+              <Button className="mt-4" onClick={addProduct}>
+                Thêm sản phẩm
+              </Button>
               <Table className="my-4 shadow-lg">
                 {/* Đầu bảng sản phẩm */}
                 <TableHeader className="bg-gradient-custom">
@@ -549,7 +552,9 @@ function CreateMultiBill() {
               {errorProduct && (
                 <p className="text-red-500 pt-5 text-xs">*{errorProduct}</p>
               )}
-              <Button className="float-end" onClick={handleViewQrCode}>Tạo hóa đơn</Button>
+              <Button className="float-end" onClick={handleViewQrCode}>
+                Tạo hóa đơn
+              </Button>
             </div>
           )}
           <div className="w-1/4 bg-white">

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5281/api/user/refresh-token";
+const API_URL = "https://vpos.giftzone.vn/api/user/refresh-token";
 
 export const refreshToken = async () => {
     try {

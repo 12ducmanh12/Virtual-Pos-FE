@@ -31,6 +31,8 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import ItemBill from "./components/item-bill";
 import { refreshToken } from "@/utils/refreshToken";
+import { baseUrl } from "@/constants/constant";
+import { webHddtUrl } from "@/constants/constant";
 
 interface Product {
   name: string;
@@ -215,7 +217,7 @@ function CreateMultiBill() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "https://vpos.giftzone.vn/api/bill/import-invoice",
+        `${baseUrl}/api/bill/import-invoice`,
         billData,
         {
           headers: {
@@ -224,7 +226,7 @@ function CreateMultiBill() {
         }
       );
 
-      const newQrCode = `https://web-hddt-giftzone-omega.vercel.app/bill/${response.data.billId}`;
+      const newQrCode = `${webHddtUrl}/${response.data.billId}`;
       setQrCodes((prevQrCodes) => ({
         ...prevQrCodes,
         [billIdActive]: newQrCode,
@@ -241,7 +243,7 @@ function CreateMultiBill() {
 
         // Gọi lại API sau khi refresh token thành công
         const response = await axios.post(
-          "https://vpos.giftzone.vn/api/bill/import-invoice",
+          `${baseUrl}/api/bill/import-invoice`,
           billData,
           {
             headers: {
@@ -250,7 +252,7 @@ function CreateMultiBill() {
           }
         );
 
-        const newQrCode = `https://web-hddt-giftzone-omega.vercel.app/bill/${response.data.billId}`;
+        const newQrCode = `${webHddtUrl}/${response.data.billId}`;
         setQrCodes((prevQrCodes) => ({
           ...prevQrCodes,
           [billIdActive]: newQrCode,
@@ -279,7 +281,7 @@ function CreateMultiBill() {
 
       try {
         const response = await axios.get(
-          "https://vpos.giftzone.vn/api/retailer/get-list-retailers",
+          `${baseUrl}/api/retailer/get-list-retailers`,
           {
             headers: {
               Authorization: `Bearer ${token}`, // Thêm token vào header
@@ -298,7 +300,7 @@ function CreateMultiBill() {
   const fetchStoresByRetailerId = async (retailerId: unknown) => {
     try {
       const response = await axios.get(
-        `https://vpos.giftzone.vn/api/store/get-stores-by-retailerId/${retailerId}`
+        `${baseUrl}/api/store/get-stores-by-retailerId/${retailerId}`
       );
       setStores(response.data); // Giả định dữ liệu trả về là mảng các cửa hàng
     } catch (error) {

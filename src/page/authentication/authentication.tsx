@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/hooks/authStore";
+import { baseUrl } from "@/constants/constant";
 import "./style.css";
 
 function Authentication() {
@@ -15,7 +16,7 @@ function Authentication() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuthStore();
-
+  console.log(baseUrl);
   const toggleForm = () => {
     setIsSignIn(!isSignIn);
     setError("");
@@ -34,7 +35,7 @@ function Authentication() {
   const handleSignInSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     try {
-      const response = await fetch("https://vpos.giftzone.vn/api/user/login", {
+      const response = await fetch(`${baseUrl}/api/user/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

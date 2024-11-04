@@ -39,18 +39,31 @@ interface dataBillType {
 function ListBills() {
   const [data, setData] = useState<dataBillType[]>([]);
   const [expandedBillIds, setExpandedBillIds] = useState<number[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [billIdToDelete, setBillIdToDelete] = useState<number | null>(null);
   const navigate = useNavigate();
+
+  const openDeleteModal = (billId: number) => {
+    setBillIdToDelete(billId);
+    setIsModalOpen(true);
+  };
+
   useEffect(() => {
+    const token = localStorage.getItem("token");
     axios
-      .get(`${baseUrl}/api/all-bill`)
+      .get(`${baseUrl}/api/bill/get-all-bill`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((response) => {
         setData(response.data);
-        console.log(data);
       })
       .catch((error) => {
         console.error("Error:", error);
       });
   }, []);
+
   const toggleExpand = (billId: number) => {
     if (expandedBillIds.includes(billId)) {
       // Nếu billId đã có trong mảng thì xóa nó đi (đóng bảng)
@@ -58,6 +71,21 @@ function ListBills() {
     } else {
       // Nếu billId chưa có trong mảng thì thêm vào (mở bảng)
       setExpandedBillIds([...expandedBillIds, billId]);
+    }
+  };
+
+  const deleteBill = async (billId: number | null) => {
+    if (!billId) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${baseUrl}/api/bill/delete/${billId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setData(data.filter((bill) => bill.billId !== billId)); // Update the UI
+    } catch (error) {
+      console.error("Delete error:", error);
     }
   };
 
@@ -127,7 +155,7 @@ function ListBills() {
                           </Button>
                         </PopoverTrigger>
                         <Trash2
-                          // onClick={() => removeProduct(index)}
+                          onClick={() => openDeleteModal(invoice.billId)}
                           className="cursor-pointer text-black hover:text-red-700 ml-7"
                         />
                       </div>
@@ -216,6 +244,28 @@ function ListBills() {
           </TableBody>
         </Table>
       </div>
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
+            <h3 className="text-lg font-bold mb-4">Confirm Delete</h3>
+            <p className="text-sm font-semibold">Are you sure you want to delete this bill?</p>
+            <div className="flex justify-end mt-6 space-x-4">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  deleteBill(billIdToDelete); // Call the delete function
+                  setIsModalOpen(false);
+                }}
+              >
+                Confirm Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Container>
   );
 }

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/hooks/authStore";
 import { baseUrl } from "@/constants/constant";
+import { LoaderCircle } from 'lucide-react';
 import "./style.css";
 
 function Authentication() {
@@ -16,7 +17,7 @@ function Authentication() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuthStore();
-  console.log(baseUrl);
+  const [loading, setLoading] = useState(false);
   const toggleForm = () => {
     setIsSignIn(!isSignIn);
     setError("");
@@ -34,6 +35,7 @@ function Authentication() {
 
   const handleSignInSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await fetch(`${baseUrl}/api/user/login`, {
         method: "POST",
@@ -51,19 +53,22 @@ function Authentication() {
         throw new Error(errorData.message || "Login failed");
       }
 
-      const { token, refreshToken, expiration } = await response.json();
+      console.log(response);
+
+      const { token } = await response.json();
 
       localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem("expiration", expiration);
 
       setIsAuthenticated(true);
       navigate("/");
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       toast({
         title: "Login Failed",
         description: "Username or Password incorrect",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,9 +87,8 @@ function Authentication() {
 
         {/* Form Sign In */}
         <div
-          className={`${isSignIn ? "slide-in-right" : "slide-out-left"} ${
-            !isSignIn && "hidden"
-          } transition-all duration-900`}
+          className={`${isSignIn ? "slide-in-right" : "slide-out-left"} ${!isSignIn && "hidden"
+            } transition-all duration-900`}
         >
           <form className="space-y-4" onSubmit={handleSignInSubmit}>
             <div>
@@ -113,16 +117,19 @@ function Authentication() {
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <Button type="submit" className="w-full button-gradient">
-              Sign In
+              {loading ? (
+                <LoaderCircle className="animate-spin h-5 w-5 text-white" />
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </form>
         </div>
 
         {/* Form Sign Up */}
         <div
-          className={`${!isSignIn ? "slide-in-left" : "slide-out-right"} ${
-            isSignIn && "hidden"
-          } transition-all duration-900`}
+          className={`${!isSignIn ? "slide-in-left" : "slide-out-right"} ${isSignIn && "hidden"
+            } transition-all duration-900`}
         >
           <form className="space-y-4" onSubmit={handleSignUpSubmit}>
             <div>

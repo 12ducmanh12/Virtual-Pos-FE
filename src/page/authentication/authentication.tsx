@@ -54,11 +54,10 @@ function Authentication() {
         throw new Error(errorData.message || "Login failed");
       }
 
-      console.log(response);
-
-      const { token } = await response.json();
+      const { token, expiration } = await response.json();
 
       localStorage.setItem("token", token);
+      localStorage.setItem("expiration", expiration);
 
       setIsAuthenticated(true);
       navigate("/");

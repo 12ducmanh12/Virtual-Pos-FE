@@ -9,10 +9,21 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      setIsAuthenticated(true); 
-    } 
-    else {
+    const expiration = localStorage.getItem("expiration");
+
+    if (token && expiration) {
+      const expirationDate = new Date(expiration);
+      const isTokenExpired = new Date() > expirationDate;
+
+      if (!isTokenExpired) {
+        setIsAuthenticated(true);
+      } else {
+        // Xóa token nếu đã hết hạn
+        localStorage.removeItem("token");
+        localStorage.removeItem("expiration");
+        setIsAuthenticated(false);
+      }
+    } else {
       setIsAuthenticated(false);
     }
   }, [setIsAuthenticated]);

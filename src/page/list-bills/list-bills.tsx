@@ -161,9 +161,11 @@ function ListBills() {
   return (
     <Container>
       <div className="flex justify-end gap-5">
-        <Button className="w-fit" onClick={handleOpenModal}>
-          Tạo Người Dùng
-        </Button>
+        {localStorage.getItem("typeUser") === "0" && (
+          <Button className="w-fit" onClick={handleOpenModal}>
+            Tạo Người Dùng
+          </Button>
+        )}
         <Button
           className="w-fit"
           onClick={() => navigate("/create-multi-bill")}
@@ -384,7 +386,7 @@ function ListBills() {
           </div>
         </div>
       )}
-      <Toaster/>
+      <Toaster />
     </Container>
   );
 }

@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface productsType {
   productId: number;
@@ -57,6 +58,7 @@ function ListBills() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [typeUser, setTypeUser] = useState(1);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const handleOpenModal = () => {
@@ -123,7 +125,11 @@ function ListBills() {
     }
   };
 
-  const createUser = async (username: string, password: string, typeUser: number) => {
+  const createUser = async (
+    username: string,
+    password: string,
+    typeUser: number
+  ) => {
     try {
       const token = localStorage.getItem("token");
 
@@ -141,7 +147,6 @@ function ListBills() {
         variant: "success",
         description: "User created successfully",
       });
-
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         const errorMessage = error.response.data || "An error occurred";
@@ -341,7 +346,9 @@ function ListBills() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
             <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-            <p className="text-sm font-semibold">Are you sure want to delete this bill?</p>
+            <p className="text-sm font-semibold">
+              Are you sure want to delete this bill?
+            </p>
             <div className="flex justify-end mt-6 space-x-4">
               <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel

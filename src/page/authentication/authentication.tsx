@@ -27,6 +27,7 @@ function Authentication() {
     e.preventDefault();
     if (password !== confirmPassword) {
       toast({
+        variant: "error",
         title: "Error",
         description: "Passwords do not match",
       });
@@ -64,6 +65,7 @@ function Authentication() {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       toast({
+        variant: "error",
         title: "Login Failed",
         description: "Username or Password incorrect",
       });

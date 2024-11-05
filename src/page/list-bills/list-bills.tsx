@@ -15,11 +15,22 @@ import QRCode from "react-qr-code";
 import { Button } from "@/components/ui/button";
 import { baseUrl } from "@/constants/constant";
 import { webHddtUrl } from "@/constants/constant";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface productsType {
   productId: number;
@@ -41,7 +52,30 @@ function ListBills() {
   const [expandedBillIds, setExpandedBillIds] = useState<number[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [billIdToDelete, setBillIdToDelete] = useState<number | null>(null);
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
+  const { toast } = useToast();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [typeUser, setTypeUser] = useState(1);
   const navigate = useNavigate();
+
+  const handleOpenModal = () => {
+    setIsCreateUserModalOpen(true);
+    setUsername("");
+    setPassword("");
+    setTypeUser(1);
+  };
+  const handleCloseModal = () => {
+    setIsCreateUserModalOpen(false);
+    setUsername("");
+    setPassword("");
+    setTypeUser(1);
+  };
+
+  const handleCreateUser = () => {
+    createUser(username, password, typeUser);
+    handleCloseModal();
+  };
 
   const openDeleteModal = (billId: number) => {
     setBillIdToDelete(billId);
@@ -89,18 +123,58 @@ function ListBills() {
     }
   };
 
+  const createUser = async (username: string, password: string, typeUser: number) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.post(
+        `${baseUrl}/api/user/create`,
+        { username, password, typeUser },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast({
+        variant: "success",
+        description: "User created successfully",
+      });
+
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const errorMessage = error.response.data || "An error occurred";
+        toast({
+          variant: "error",
+          description: errorMessage,
+        });
+      } else {
+        toast({
+          variant: "error",
+          description: "An unknown error occurred",
+        });
+      }
+    }
+  };
+
   return (
     <Container>
-      <div className="flex items-baseline justify-center">
+      <div className="flex justify-end gap-5">
+        <Button className="w-fit" onClick={handleOpenModal}>
+          Tạo Người Dùng
+        </Button>
+        <Button
+          className="w-fit"
+          onClick={() => navigate("/create-multi-bill")}
+        >
+          Tạo Hóa Đơn
+        </Button>
+      </div>
+      <div className="flex items-center justify-center my-5">
         <h2 className="flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
           Danh Sách Hóa Đơn
         </h2>
-        <Button
-          className="ml-auto w-fit my-10"
-          onClick={() => navigate("/create-multi-bill")}
-        >
-          Tạo Bill
-        </Button>
       </div>
       <div className="rounded-lg shadow-xl rounded-r-lg">
         <Table className="relative">
@@ -178,7 +252,7 @@ function ListBills() {
                             </p>
                           </div>
                           <Link
-                            to={`${webHddtUrl}/${invoice.billId}`}
+                            to={`/bill/${invoice.billId}`}
                             target="_blank"
                             className="bg-gradient-custom text-white w-[25%] flex h-10 justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
                           >
@@ -248,7 +322,7 @@ function ListBills() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
             <h3 className="text-lg font-bold mb-4">Confirm Delete</h3>
-            <p className="text-sm font-semibold">Are you sure you want to delete this bill?</p>
+            <p className="text-sm font-semibold">Are you sure want to delete this bill?</p>
             <div className="flex justify-end mt-6 space-x-4">
               <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
@@ -266,6 +340,51 @@ function ListBills() {
           </div>
         </div>
       )}
+
+      {isCreateUserModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg w-80">
+            <h2 className="text-lg font-semibold mb-4">Tạo Người Dùng</h2>
+            <div className="mb-2">
+              <Input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
+            <div className="mb-2">
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div className="mb-2">
+              <Select
+                value={typeUser.toString()}
+                onValueChange={(value) => setTypeUser(Number(value))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Chọn loại người dùng" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="0">Admin</SelectItem>
+                    <SelectItem value="1">User</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-around gap-2 mt-4">
+              <Button onClick={handleCloseModal}>Hủy</Button>
+              <Button onClick={handleCreateUser}>Xác Nhận</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      <Toaster/>
     </Container>
   );
 }

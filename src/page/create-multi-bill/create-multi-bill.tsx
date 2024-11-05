@@ -57,8 +57,6 @@ function CreateMultiBill() {
   const [products, setProducts] = useState<{ [key: number]: Product[] }>({});
   const [errorBranch, setErrorBranch] = useState<string>("");
   const [errorProduct, setErrorProduct] = useState<string>("");
-  const [retailerId, setRetailerId] = useState<string>("");
-  const [storeId, setStoreId] = useState<string>("");
   const [animationback, setAnimationback] = useState(false);
   const [qrCode, setQrCode] = useState<string>("");
   const [bill, setBill] = useState<number[]>([1]);
@@ -76,8 +74,6 @@ function CreateMultiBill() {
   const activeBillDetails = billDetails[billIdActive] || { retailerId: "", storeId: "", stores: [] };
 
   const handleResetField = () => {
-    setRetailerId("");
-    setStoreId("");
     setProducts({
       [billIdActive]: [
         { name: "", sku: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
@@ -129,137 +125,6 @@ function CreateMultiBill() {
     );
     setProducts(updatedProducts);
   };
-
-  const handleSubmit = async () => {
-    // Kiểm tra nếu chưa chọn cửa hàng
-    if (!retailerId && !storeId) {
-      setErrorBranch("Vui lòng chọn cửa hàng trước khi tạo đơn hàng.");
-      return;
-    }
-
-    // Kiểm tra từng bill và xác thực sản phẩm của mỗi bill
-    const allBillsValid = bill.every((billId) => {
-      const billProducts = products[billId] || [];
-      // Kiểm tra nếu mảng billProducts trống
-      if (billProducts.length === 0) {
-        setErrorProduct("Vui lòng thêm ít nhất một sản phẩm cho mỗi đơn hàng.");
-        return false;
-      }
-      // Kiểm tra nếu sản phẩm hợp lệ (name không rỗng, unitPrice > 0, amount > 0)
-      return billProducts.every(
-        (product) => product.name && product.unitPrice > 0 && product.amount > 0
-      );
-    });
-
-    // Nếu không hợp lệ, không cho phép tiếp tục
-    if (!allBillsValid) {
-      return;
-    }
-
-    // Xóa thông báo lỗi khi tất cả đều hợp lệ
-    setErrorProduct("");
-    setErrorBranch("");
-  };
-
-  // const handleViewQrCode = async () => {
-  //   if (qrCodes[billIdActive]) {
-  //     setQrCode(qrCodes[billIdActive]);
-  //     return;
-  //   }
-
-  //   console.log(retailerId);
-
-  //   if (!retailerId) {
-  //     setErrorBranch("Vui lòng chọn nhà bán lẻ khi tạo đơn hàng.");
-  //     return;
-  //   }
-
-  //   if (!storeId) {
-  //     setErrorBranch("Vui lòng chọn cửa hàng khi tạo đơn hàng.");
-  //     return;
-  //   }
-
-  //   const activeBillProducts = products[billIdActive] || [];
-  //   if (
-  //     activeBillProducts.length === 0 ||
-  //     activeBillProducts.some(
-  //       (product) =>
-  //         !product.name || product.unitPrice <= 0 || product.amount <= 0
-  //     )
-  //   ) {
-  //     setErrorProduct("Vui lòng điền đầy đủ thông tin sản phẩm trước khi lưu.");
-  //     return;
-  //   }
-
-  //   setErrorProduct("");
-  //   setErrorBranch("");
-
-  //   const billData = {
-  //     storeId,
-  //     products: activeBillProducts,
-  //     totalDiscount: activeBillProducts.reduce(
-  //       (acc, product) => acc + product.discount * product.amount,
-  //       0
-  //     ),
-  //     total: activeBillProducts.reduce(
-  //       (acc, product) => acc + product.total,
-  //       0
-  //     ),
-  //   };
-
-  //   try {
-  //     setLoading(true);
-  //     const token = localStorage.getItem("token");
-  //     const response = await axios.post(
-  //       `${baseUrl}/api/bill/create`,
-  //       billData,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     const newQrCode = `${webHddtUrl}/${response.data.billId}`;
-  //     setQrCodes((prevQrCodes) => ({
-  //       ...prevQrCodes,
-  //       [billIdActive]: newQrCode,
-  //     }));
-  //     setQrCode(newQrCode);
-  //     setLoading(false);
-  //   } catch (error) {
-  //     if (
-  //       axios.isAxiosError(error) &&
-  //       error.response?.data?.error === "Unauthorized"
-  //     ) {
-  //       // Thực hiện refresh token nếu lỗi Unauthorized
-  //       await refreshToken();
-  //       const token = localStorage.getItem("token");
-
-  //       // Gọi lại API sau khi refresh token thành công
-  //       const response = await axios.post(
-  //         `${baseUrl}/api/bill/create`,
-  //         billData,
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //         }
-  //       );
-
-  //       const newQrCode = `${webHddtUrl}/${response.data.billId}`;
-  //       setQrCodes((prevQrCodes) => ({
-  //         ...prevQrCodes,
-  //         [billIdActive]: newQrCode,
-  //       }));
-  //       setQrCode(newQrCode);
-  //     } else {
-  //       console.error("Error:", error);
-  //     }
-  //   }
-  // };
-
-
 
   const handleViewQrCode = async (billNumber: number) => {
     // Thay thế billIdActive bằng billNumber
@@ -497,7 +362,6 @@ function CreateMultiBill() {
           />
           <p>Quay lại danh sách</p>
         </div>
-        <Button onClick={handleSubmit}>Save</Button>
       </div>
       <div className="flex justify-between">
         <div className="w-2/12 flex flex-col rounded-lg">
@@ -511,7 +375,7 @@ function CreateMultiBill() {
               active={item === billIdActive}
             />
           ))}
-          <Button className="w-1/2 mt-6" onClick={handleAddBill}>
+          <Button className="mt-6 w-fit self-center" onClick={handleAddBill}>
             <SquarePlus strokeWidth={1.5} /> Thêm Bill
           </Button>
         </div>
@@ -570,7 +434,7 @@ function CreateMultiBill() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div
-                        className="bg-sky-500 rounded-full w-fit h-fit p-3 ml-auto cursor-pointer"
+                        className="bg-gradient-to-r from-[#F21472] to-[#6C24F6] rounded-full w-fit h-fit p-3 ml-auto cursor-pointer"
                         onClick={handleResetField}
                       >
                         <RotateCcw className="text-white" />

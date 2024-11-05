@@ -8,16 +8,30 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import axios from "axios";
-import { ChevronDown, ChevronRight, ScanQrCode } from "lucide-react";
+import { ChevronDown, ChevronRight, ScanQrCode, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import { Button } from "@/components/ui/button";
+import { baseUrl } from "@/constants/constant";
+import { webHddtUrl } from "@/constants/constant";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface productsType {
   productId: number;
@@ -31,45 +45,143 @@ interface dataBillType {
   billId: number;
   storeName: string;
   total: number;
+  maEinvoice: string;
   products: Array<productsType>;
 }
 function ListBills() {
   const [data, setData] = useState<dataBillType[]>([]);
   const [expandedBillIds, setExpandedBillIds] = useState<number[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [billIdToDelete, setBillIdToDelete] = useState<number | null>(null);
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
+  const { toast } = useToast();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [typeUser, setTypeUser] = useState(1);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const handleOpenModal = () => {
+    setIsCreateUserModalOpen(true);
+    setUsername("");
+    setPassword("");
+    setTypeUser(1);
+  };
+  const handleCloseModal = () => {
+    setIsCreateUserModalOpen(false);
+    setUsername("");
+    setPassword("");
+    setTypeUser(1);
+  };
+
+  const handleCreateUser = () => {
+    createUser(username, password, typeUser);
+    handleCloseModal();
+  };
+
+  const openDeleteModal = (billId: number) => {
+    setBillIdToDelete(billId);
+    setIsModalOpen(true);
+  };
+
   useEffect(() => {
+    const token = localStorage.getItem("token");
     axios
-      .get("https://vpos.giftzone.vn/api/all-bill")
+      .get(`${baseUrl}/api/bill/get-all-bill`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((response) => {
         setData(response.data);
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Error:", error);
+        setLoading(false);
       });
   }, []);
+
   const toggleExpand = (billId: number) => {
     if (expandedBillIds.includes(billId)) {
-      // Nếu billId đã có trong mảng thì xóa nó đi (đóng bảng)
       setExpandedBillIds(expandedBillIds.filter((id) => id !== billId));
     } else {
-      // Nếu billId chưa có trong mảng thì thêm vào (mở bảng)
       setExpandedBillIds([...expandedBillIds, billId]);
+    }
+  };
+
+  const deleteBill = async (billId: number | null) => {
+    if (!billId) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${baseUrl}/api/bill/delete/${billId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setData(data.filter((bill) => bill.billId !== billId)); // Update the UI
+    } catch (error) {
+      console.error("Delete error:", error);
+    }
+  };
+
+  const createUser = async (
+    username: string,
+    password: string,
+    typeUser: number
+  ) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.post(
+        `${baseUrl}/api/user/create`,
+        { username, password, typeUser },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast({
+        variant: "success",
+        description: "User created successfully",
+      });
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const errorMessage = error.response.data || "An error occurred";
+        toast({
+          variant: "error",
+          description: errorMessage,
+        });
+      } else {
+        toast({
+          variant: "error",
+          description: "An unknown error occurred",
+        });
+      }
     }
   };
 
   return (
     <Container>
-      <div className="flex items-baseline justify-center">
+      <div className="flex justify-end gap-5">
+        {localStorage.getItem("typeUser") === "0" && (
+          <Button className="w-fit" onClick={handleOpenModal}>
+            Tạo Người Dùng
+          </Button>
+        )}
+        <Button
+          className="w-fit"
+          onClick={() => navigate("/create-multi-bill")}
+        >
+          Tạo Hóa Đơn
+        </Button>
+      </div>
+      <div className="flex items-center justify-center my-5">
         <h2 className="flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
           Danh Sách Hóa Đơn
         </h2>
-        <Button
-          className="ml-auto w-fit my-10"
-          onClick={() => navigate("/create-multi-bill")}
-        >
-          Tạo Bill
-        </Button>
       </div>
       <div className="rounded-lg shadow-xl rounded-r-lg">
         <Table className="relative">
@@ -91,6 +203,23 @@ function ListBills() {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {loading && (
+              <TableRow>
+                <TableCell></TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] text-left my-4" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
+                </TableCell>
+              </TableRow>
+            )}
             {data?.map((invoice) => (
               <React.Fragment key={invoice.billId}>
                 <TableRow>
@@ -116,12 +245,18 @@ function ListBills() {
                   <TableCell className="text-center">{invoice.total}</TableCell>
                   <TableCell className="flex justify-center relative">
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline">
-                          <ScanQrCode />
-                          <p className="text-sm">QR Code</p>
-                        </Button>
-                      </PopoverTrigger>
+                      <div className="flex justify-between items-center">
+                        <PopoverTrigger asChild>
+                          <Button variant="outline">
+                            <ScanQrCode />
+                            <p className="text-sm">QR Code</p>
+                          </Button>
+                        </PopoverTrigger>
+                        <Trash2
+                          onClick={() => openDeleteModal(invoice.billId)}
+                          className="cursor-pointer text-black hover:text-red-700 ml-7"
+                        />
+                      </div>
                       <PopoverContent className="w-60">
                         <QRCode
                           size={150}
@@ -131,17 +266,17 @@ function ListBills() {
                             width: "100%",
                             padding: "10px",
                           }}
-                          value={`https://web-hddt-giftzone-omega.vercel.app/bill/${invoice.billId}`}
+                          value={`${webHddtUrl}/${invoice.billId}`}
                           viewBox={`0 0 256 256`}
                         />
                         <div className="flex mt-3">
                           <div className="border border-blue-400 px-2 flex items-center w-[75%] rounded-tl-xl rounded-bl-xl">
                             <p className="block w-full whitespace-nowrap overflow-hidden text-ellipsis">
-                              {`https://web-hddt-giftzone-omega.vercel.app/bill/${invoice.billId}`}
+                              {`${webHddtUrl}/${invoice.billId}`}
                             </p>
                           </div>
                           <Link
-                            to={`https://web-hddt-giftzone-omega.vercel.app/bill/${invoice.billId}`}
+                            to={`/bill/${invoice.billId}`}
                             target="_blank"
                             className="bg-gradient-custom text-white w-[25%] flex h-10 justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
                           >
@@ -207,6 +342,75 @@ function ListBills() {
           </TableBody>
         </Table>
       </div>
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+            <p className="text-sm font-semibold">
+              Are you sure want to delete this bill?
+            </p>
+            <div className="flex justify-end mt-6 space-x-4">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  deleteBill(billIdToDelete); // Call the delete function
+                  setIsModalOpen(false);
+                }}
+              >
+                Confirm Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isCreateUserModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg w-80">
+            <h2 className="text-lg font-semibold mb-4">Tạo Người Dùng</h2>
+            <div className="mb-2">
+              <Input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
+            <div className="mb-2">
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div className="mb-2">
+              <Select
+                value={typeUser.toString()}
+                onValueChange={(value) => setTypeUser(Number(value))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Chọn loại người dùng" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="0">Admin</SelectItem>
+                    <SelectItem value="1">User</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-around gap-2 mt-4">
+              <Button onClick={handleCloseModal}>Hủy</Button>
+              <Button onClick={handleCreateUser}>Xác Nhận</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      <Toaster />
     </Container>
   );
 }

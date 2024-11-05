@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import QRCode from "react-qr-code";
-import { ArrowLeft, RotateCcw, SquarePlus, Trash2 } from "lucide-react";
+import { ArrowLeft, RotateCcw, SquarePlus, Trash2, ScanQrCode } from "lucide-react";
 import "./style.css";
 import {
   Select,
@@ -36,6 +36,7 @@ import { webHddtUrl } from "@/constants/constant";
 
 interface Product {
   name: string;
+  sku: string;
   unitPrice: number;
   amount: number;
   discount: number;
@@ -56,25 +57,26 @@ function CreateMultiBill() {
   const [products, setProducts] = useState<{ [key: number]: Product[] }>({});
   const [errorBranch, setErrorBranch] = useState<string>("");
   const [errorProduct, setErrorProduct] = useState<string>("");
-  const [retailerId, setRetailerId] = useState<string>("");
-  const [storeId, setStoreId] = useState<string>("");
   const [animationback, setAnimationback] = useState(false);
   const [qrCode, setQrCode] = useState<string>("");
   const [bill, setBill] = useState<number[]>([1]);
   const [billIdActive, setBillIdActive] = useState<number>(1);
   const [retailers, setRetailers] = useState<Retailer[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
   const navigate = useNavigate();
-  const activeProducts = products[billIdActive] || [
-    { name: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
-  ];
+  const [loading, setLoading] = useState(false);
 
-  const handeResetField = () => {
-    setRetailerId("");
-    setStoreId("");
+  const activeProducts = products[billIdActive] || [
+    { name: "", sku: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
+  ];
+  const [billDetails, setBillDetails] = useState<{
+    [key: number]: { retailerId: string; storeId: string; stores: Store[] }
+  }>({});
+  const activeBillDetails = billDetails[billIdActive] || { retailerId: "", storeId: "", stores: [] };
+
+  const handleResetField = () => {
     setProducts({
       [billIdActive]: [
-        { name: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
+        { name: "", sku: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
       ],
     });
   };
@@ -110,7 +112,7 @@ function CreateMultiBill() {
 
     updatedProducts[billIdActive] = [
       ...updatedProducts[billIdActive],
-      { name: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
+      { name: "", sku: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
     ];
 
     setProducts(updatedProducts);
@@ -124,55 +126,17 @@ function CreateMultiBill() {
     setProducts(updatedProducts);
   };
 
-  const handleSubmit = async () => {
-    // Kiểm tra nếu chưa chọn cửa hàng
-    if (!retailerId && !storeId) {
-      setErrorBranch("Vui lòng chọn cửa hàng trước khi tạo đơn hàng.");
-      return;
-    }
+  const handleViewQrCode = async (billNumber: number) => {
+    // Thay thế billIdActive bằng billNumber
+    const activeProducts = products[billNumber] || [
+      { name: "", sku: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
+    ];
 
-    // Kiểm tra từng bill và xác thực sản phẩm của mỗi bill
-    const allBillsValid = bill.every((billId) => {
-      const billProducts = products[billId] || [];
-      // Kiểm tra nếu mảng billProducts trống
-      if (billProducts.length === 0) {
-        setErrorProduct("Vui lòng thêm ít nhất một sản phẩm cho mỗi đơn hàng.");
-        return false;
-      }
-      // Kiểm tra nếu sản phẩm hợp lệ (name không rỗng, unitPrice > 0, amount > 0)
-      return billProducts.every(
-        (product) => product.name && product.unitPrice > 0 && product.amount > 0
-      );
-    });
+    const activeBillDetails = billDetails[billNumber] || { retailerId: "", storeId: "", stores: [] };
+    const { retailerId, storeId } = activeBillDetails;
 
-    // Nếu không hợp lệ, không cho phép tiếp tục
-    if (!allBillsValid) {
-      return;
-    }
-
-    // Xóa thông báo lỗi khi tất cả đều hợp lệ
-    setErrorProduct("");
-    setErrorBranch("");
-
-    // Gửi dữ liệu nếu hợp lệ (mở lại khi cần thiết)
-    // try {
-    //   const response = await axios.post(
-    //     "http://180.93.182.148:5000/api/bill/create-multi",
-    //     { bills: billDataList }
-    //   );
-
-    //   setQrCode(
-    //     `https://main.d1jsvpuea6rgcp.amplifyapp.com/bill/${response.data.billIds.join(",")}`
-    //   );
-    //   handeResetField();
-    // } catch (error) {
-    //   console.error("Error:", error);
-    // }
-  };
-
-  const handleViewQrCode = async () => {
-    if (qrCodes[billIdActive]) {
-      setQrCode(qrCodes[billIdActive]);
+    if (qrCodes[billNumber]) {
+      setQrCode(qrCodes[billNumber]);
       return;
     }
 
@@ -186,12 +150,10 @@ function CreateMultiBill() {
       return;
     }
 
-    const activeBillProducts = products[billIdActive] || [];
     if (
-      activeBillProducts.length === 0 ||
-      activeBillProducts.some(
-        (product) =>
-          !product.name || product.unitPrice <= 0 || product.amount <= 0
+      activeProducts.length === 0 ||
+      activeProducts.some(
+        (product) => !product.name || product.unitPrice <= 0 || product.amount <= 0
       )
     ) {
       setErrorProduct("Vui lòng điền đầy đủ thông tin sản phẩm trước khi lưu.");
@@ -203,21 +165,22 @@ function CreateMultiBill() {
 
     const billData = {
       storeId,
-      products: activeBillProducts,
-      totalDiscount: activeBillProducts.reduce(
+      products: activeProducts,
+      totalDiscount: activeProducts.reduce(
         (acc, product) => acc + product.discount * product.amount,
         0
       ),
-      total: activeBillProducts.reduce(
+      total: activeProducts.reduce(
         (acc, product) => acc + product.total,
         0
       ),
     };
 
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${baseUrl}/api/bill/import-invoice`,
+        `${baseUrl}/api/bill/create`,
         billData,
         {
           headers: {
@@ -229,9 +192,10 @@ function CreateMultiBill() {
       const newQrCode = `${webHddtUrl}/${response.data.billId}`;
       setQrCodes((prevQrCodes) => ({
         ...prevQrCodes,
-        [billIdActive]: newQrCode,
+        [billNumber]: newQrCode,
       }));
       setQrCode(newQrCode);
+      setLoading(false);
     } catch (error) {
       if (
         axios.isAxiosError(error) &&
@@ -243,7 +207,7 @@ function CreateMultiBill() {
 
         // Gọi lại API sau khi refresh token thành công
         const response = await axios.post(
-          `${baseUrl}/api/bill/import-invoice`,
+          `${baseUrl}/api/bill/create`,
           billData,
           {
             headers: {
@@ -255,7 +219,7 @@ function CreateMultiBill() {
         const newQrCode = `${webHddtUrl}/${response.data.billId}`;
         setQrCodes((prevQrCodes) => ({
           ...prevQrCodes,
-          [billIdActive]: newQrCode,
+          [billNumber]: newQrCode,
         }));
         setQrCode(newQrCode);
       } else {
@@ -265,7 +229,17 @@ function CreateMultiBill() {
   };
 
   const handleAddBill = () => {
-    setBill((prevBill) => [...prevBill, prevBill[prevBill.length - 1] + 1]);
+    setBill((prevBill) => {
+      const newBillNumber = prevBill.length === 0 ? 1 : prevBill[prevBill.length - 1] + 1;
+
+      // Initialize the retailer and store for the new bill with all required fields
+      setBillDetails((prevDetails) => ({
+        ...prevDetails,
+        [newBillNumber]: { retailerId: "", storeId: "", stores: [], products: [] } // Đảm bảo có tất cả các thuộc tính
+      }));
+
+      return [...prevBill, newBillNumber];
+    });
   };
 
   const handleDeleteBill = (billNumber: number) => {
@@ -275,52 +249,108 @@ function CreateMultiBill() {
     });
   };
 
-  useEffect(() => {
-    const fetchRetailers = async () => {
-      const token = localStorage.getItem("token");
 
-      try {
-        const response = await axios.get(
-          `${baseUrl}/api/retailer/get-list-retailers`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // Thêm token vào header
-            },
-          }
-        );
-        setRetailers(response.data);
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    };
+  const handleDuplicateBill = (billNumber: number) => {
+    setBill((prevBills) => {
+      const newBillNumber = Math.max(...prevBills) + 1;
 
-    fetchRetailers();
-  }, []);
+      setProducts((prevProducts) => ({
+        ...prevProducts,
+        [newBillNumber]: [...(products[billNumber] || [])],
+      }));
 
-  const fetchStoresByRetailerId = async (retailerId: unknown) => {
+      setBillDetails((prevDetails) => ({
+        ...prevDetails,
+        [newBillNumber]: { ...prevDetails[billNumber] }, // Sao chép retailerId và storeId từ bill gốc
+      }));
+
+      return [...prevBills, newBillNumber];
+    });
+  };
+
+
+  const handleSelectRetailer = async (value: string) => {
+    const newStores = await fetchStoresByRetailerId(value);
+
+    setBillDetails((prevDetails) => ({
+      ...prevDetails,
+      [billIdActive]: {
+        ...prevDetails[billIdActive], // Giữ lại thông tin retailerId và storeId hiện tại
+        retailerId: value, // Cập nhật retailerId mới
+        stores: newStores, // Cập nhật stores với danh sách mới
+        storeId: "", // Reset storeId khi đổi retailer
+      },
+    }));
+  };
+
+  const handleSelectStore = (value: string) => {
+    setBillDetails((prevDetails) => ({
+      ...prevDetails,
+      [billIdActive]: {
+        ...prevDetails[billIdActive],
+        storeId: value, // Cập nhật storeId
+      },
+    }));
+  };
+
+  const fetchRetailers = async () => {
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.get(
-        `${baseUrl}/api/store/get-stores-by-retailerId/${retailerId}`
+        `${baseUrl}/api/retailer/get-list-retailers`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      setStores(response.data); // Giả định dữ liệu trả về là mảng các cửa hàng
+      setRetailers(response.data);
     } catch (error) {
-      console.error("Error fetching stores:", error);
-      setErrorBranch("Không thể lấy danh sách cửa hàng.");
+      console.error("Error:", error);
     }
   };
 
   useEffect(() => {
-    // Khi chuyển sang bill khác, lấy mã QR đã lưu (nếu có) và đặt vào qrCode
+    fetchRetailers();
+  }, []);
+
+  const fetchStoresByRetailerId = async (retailerId: string): Promise<Store[]> => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(
+        `${baseUrl}/api/store/get-stores-by-retailerId/${retailerId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Thêm token vào header
+          },
+        }
+      );
+
+      // Giả định dữ liệu trả về là mảng các cửa hàng
+      return response.data as Store[]; // Trả về mảng các cửa hàng
+    } catch (error) {
+      console.error("Error fetching stores:", error);
+      setErrorBranch("Không thể lấy danh sách cửa hàng.");
+      return []; // Trả về mảng rỗng nếu có lỗi
+    }
+  };
+
+  useEffect(() => {
     if (qrCodes[billIdActive]) {
       setQrCode(qrCodes[billIdActive]);
     } else {
-      setQrCode(""); // Xóa mã QR nếu chưa được tạo cho bill này
+      setQrCode("");
     }
   }, [billIdActive, qrCodes]);
 
+  const handleViewQrCodeWrapper = () => {
+    handleViewQrCode(billIdActive); // billNumber phải được xác định trong ngữ cảnh
+  };
+
   return (
     <div className="bg-[#f9f0ff] h-screen px-4 py-4 xl:max-w-[1920px] w-full mx-auto xl:px-20">
-      <div className="flex justify-between items-center my-10">
+      <div className="flex justify-between items-center mb-5">
         <div
           className={`text-white flex cursor-pointer items-center gap-x-2 p-2 rounded-lg border w-fit bg-gradient-custom`}
           onClick={() => navigate("/")}
@@ -332,7 +362,11 @@ function CreateMultiBill() {
           />
           <p>Quay lại danh sách</p>
         </div>
-        <Button onClick={handleSubmit}>Save</Button>
+      </div>
+      <div className="flex items-center justify-center mb-5">
+        <h2 className="flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
+          Tạo Hóa Đơn
+        </h2>
       </div>
       <div className="flex justify-between">
         <div className="w-2/12 flex flex-col rounded-lg">
@@ -342,25 +376,22 @@ function CreateMultiBill() {
               billNumber={item}
               onClick={() => setBillIdActive(item)}
               handleDelete={() => handleDeleteBill(item)}
+              handleDuplicate={() => handleDuplicateBill(item)}
               active={item === billIdActive}
             />
           ))}
-          <Button className="w-1/2 mt-6" onClick={handleAddBill}>
+          <Button className="mt-6 w-fit self-center" onClick={handleAddBill}>
             <SquarePlus strokeWidth={1.5} /> Thêm Bill
           </Button>
         </div>
         <div className="w-10/12 flex">
           {billIdActive && (
-            <div className="w-3/4 pt-4 pb-4 px-6 bg-white rounded-r-lg">
+            <div className="w-4/5 pt-4 pb-4 px-6 bg-white rounded-r-lg">
               <div className="flex justify-between items-center">
                 <div className="flex justify-between items-center gap-[4.5rem]">
                   <Select
-                    value={retailerId}
-                    onValueChange={(value) => {
-                      setRetailerId(value);
-                      // Gọi API để lấy danh sách cửa hàng khi có lựa chọn
-                      fetchStoresByRetailerId(value);
-                    }}
+                    value={activeBillDetails.retailerId}
+                    onValueChange={(value) => handleSelectRetailer(value)}
                   >
                     <SelectTrigger className="w-[190px] mt-4">
                       <SelectValue placeholder="Lựa chọn nhà bán lẻ" />
@@ -380,23 +411,19 @@ function CreateMultiBill() {
                   </Select>
 
                   <Select
-                    disabled={!retailerId}
-                    value={storeId}
-                    onValueChange={(value) => {
-                      setStoreId(value);
-                      // Gọi API để lấy danh sách cửa hàng khi có lựa chọn
-                      fetchStoresByRetailerId(value);
-                    }}
+                    disabled={!activeBillDetails.retailerId}
+                    value={activeBillDetails.storeId}
+                    onValueChange={(value) => handleSelectStore(value)}
                   >
                     <SelectTrigger className="w-[190px] mt-4">
                       <SelectValue placeholder="Lựa chọn cửa hàng" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {stores.map((store) => (
+                        {activeBillDetails.stores.map((store) => (
                           <SelectItem
                             key={store.storeId}
-                            value={store.storeId.toString()}
+                            value={store.storeId.toString()} // Sử dụng storeId
                           >
                             {store.name}
                           </SelectItem>
@@ -412,8 +439,8 @@ function CreateMultiBill() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div
-                        className="bg-sky-500 rounded-full w-fit h-fit p-3 ml-auto cursor-pointer"
-                        onClick={handeResetField}
+                        className="bg-gradient-to-r from-[#F21472] to-[#6C24F6] rounded-full w-fit h-fit p-3 ml-auto cursor-pointer"
+                        onClick={handleResetField}
                       >
                         <RotateCcw className="text-white" />
                       </div>
@@ -431,10 +458,15 @@ function CreateMultiBill() {
                 {/* Đầu bảng sản phẩm */}
                 <TableHeader className="bg-gradient-custom">
                   <TableRow>
-                    <TableHead className="w-3/12 text-white rounded-tl-lg">
+                    <TableHead className="w-2/12 text-white rounded-tl-lg">
                       Tên sản phẩm
                     </TableHead>
-                    <TableHead className="w-2/12 text-white">Đơn giá</TableHead>
+                    <TableHead className="w-2/12 text-white">
+                      Sku
+                    </TableHead>
+                    <TableHead className="w-2/12 text-white">
+                      Đơn giá
+                    </TableHead>
                     <TableHead className="w-2/12 text-white">
                       Số lượng
                     </TableHead>
@@ -444,8 +476,7 @@ function CreateMultiBill() {
                     <TableHead className="w-2/12 text-white">
                       Thành tiền
                     </TableHead>
-                    <TableHead className="w-1/12 text-white rounded-tr-lg">
-                      Actions
+                    <TableHead className=" text-white rounded-tr-lg">
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -466,7 +497,20 @@ function CreateMultiBill() {
                           placeholder="Tên sản phẩm"
                         />
                       </TableCell>
-                      {/* Các ô nhập khác */}
+                      <TableCell>
+                        <Input
+                          value={product.sku}
+                          onChange={(e) =>
+                            handleProductChange(
+                              billIdActive,
+                              index,
+                              "sku",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Mã Sku"
+                        />
+                      </TableCell>
                       <TableCell>
                         <Input
                           type="number"
@@ -548,16 +592,17 @@ function CreateMultiBill() {
               {errorProduct && (
                 <p className="text-red-500 pt-5 text-xs">*{errorProduct}</p>
               )}
-              <Button className="float-end" onClick={handleViewQrCode}>
+              <Button className="float-end" onClick={handleViewQrCodeWrapper}>
                 Tạo hóa đơn
               </Button>
             </div>
           )}
-          <div className="w-1/4 bg-white">
+          <div className="w-1/5 bg-white">
             <div className="flex flex-col justify-center pt-4 pr-4">
               {qrCode ? (
                 <div className="flex flex-col mt-3">
                   <QRCode
+                    className="mt-3"
                     size={256}
                     style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                     value={qrCode}
@@ -579,7 +624,11 @@ function CreateMultiBill() {
                   </div>
                 </div>
               ) : (
-                <></>
+                <div className="flex items-center justify-center mt-3">
+                  <ScanQrCode
+                    className={`w-[100%] h-[100%] mt-3 ${loading ? "animate-colorChange" : "text-black"}`}
+                  />
+                </div>
               )}
             </div>
           </div>

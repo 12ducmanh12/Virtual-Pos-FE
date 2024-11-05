@@ -5,18 +5,22 @@ import { useEffect } from "react";
 import { useAuthStore } from "./hooks/authStore";
 
 const App: React.FC = () => {
-  // const initialAuthState = localStorage.getItem("isAuthenticated") === "true";
   const { isAuthenticated, setIsAuthenticated } = useAuthStore();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const expireDate = localStorage.getItem("expiration");
-    if (token && expireDate) {
-      const now = new Date().getTime();
-      const expirationTime = new Date(expireDate).getTime();
-      if (now < expirationTime) {
+    const expiration = localStorage.getItem("expiration");
+
+    if (token && expiration) {
+      const expirationDate = new Date(expiration);
+      const isTokenExpired = new Date() > expirationDate;
+
+      if (!isTokenExpired) {
         setIsAuthenticated(true);
       } else {
+        // Xóa token nếu đã hết hạn
+        localStorage.removeItem("token");
+        localStorage.removeItem("expiration");
         setIsAuthenticated(false);
       }
     } else {
@@ -27,7 +31,7 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {routes.map((route: any) => (
+        {routes.map((route) => (
           <Route
             path={route.route}
             element={

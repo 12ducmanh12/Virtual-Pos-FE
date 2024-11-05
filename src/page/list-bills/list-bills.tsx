@@ -20,6 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface productsType {
   productId: number;
@@ -38,23 +39,24 @@ interface dataBillType {
 function ListBills() {
   const [data, setData] = useState<dataBillType[]>([]);
   const [expandedBillIds, setExpandedBillIds] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   useEffect(() => {
     axios
       .get(`${baseUrl}/api/all-bill`)
       .then((response) => {
         setData(response.data);
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Error:", error);
+        setLoading(false);
       });
   }, []);
   const toggleExpand = (billId: number) => {
     if (expandedBillIds.includes(billId)) {
-      // Nếu billId đã có trong mảng thì xóa nó đi (đóng bảng)
       setExpandedBillIds(expandedBillIds.filter((id) => id !== billId));
     } else {
-      // Nếu billId chưa có trong mảng thì thêm vào (mở bảng)
       setExpandedBillIds([...expandedBillIds, billId]);
     }
   };
@@ -92,6 +94,23 @@ function ListBills() {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {loading && (
+              <TableRow>
+                <TableCell></TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] text-left my-4" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
+                </TableCell>
+              </TableRow>
+            )}
             {data?.map((invoice) => (
               <React.Fragment key={invoice.billId}>
                 <TableRow>

@@ -254,7 +254,7 @@ function ListBills() {
                             </p>
                           </div>
                           <Link
-                            to={`${webHddtUrl}/bill/${invoice.billId}`}
+                            to={`${webHddtUrl}/${invoice.billId}`}
                             target="_blank"
                             className="bg-gradient-custom text-white w-[25%] flex h-10 justify-center items-center rounded-tr-xl rounded-br-xl cursor-pointer"
                           >

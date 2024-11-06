@@ -114,7 +114,7 @@ function ListBills() {
     if (!billId) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`https://vpos.giftzone.vn/api/bill/delete/${billId}`, {
+      await axios.delete(`${baseUrl}/api/bill/delete/${billId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

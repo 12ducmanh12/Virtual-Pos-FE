@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import QRCode from "react-qr-code";
-import { ArrowLeft, RotateCcw, SquarePlus, Trash2, ScanQrCode } from "lucide-react";
+import {
+  ArrowLeft,
+  RotateCcw,
+  SquarePlus,
+  Trash2,
+  ScanQrCode,
+} from "lucide-react";
 import "./style.css";
 import {
   Select,
@@ -69,9 +75,13 @@ function CreateMultiBill() {
     { name: "", sku: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
   ];
   const [billDetails, setBillDetails] = useState<{
-    [key: number]: { retailerId: string; storeId: string; stores: Store[] }
+    [key: number]: { retailerId: string; storeId: string; stores: Store[] };
   }>({});
-  const activeBillDetails = billDetails[billIdActive] || { retailerId: "", storeId: "", stores: [] };
+  const activeBillDetails = billDetails[billIdActive] || {
+    retailerId: "",
+    storeId: "",
+    stores: [],
+  };
 
   const handleResetField = () => {
     setProducts({
@@ -132,7 +142,11 @@ function CreateMultiBill() {
       { name: "", sku: "", unitPrice: 0, amount: 1, discount: 0, total: 0 },
     ];
 
-    const activeBillDetails = billDetails[billNumber] || { retailerId: "", storeId: "", stores: [] };
+    const activeBillDetails = billDetails[billNumber] || {
+      retailerId: "",
+      storeId: "",
+      stores: [],
+    };
     const { retailerId, storeId } = activeBillDetails;
 
     if (qrCodes[billNumber]) {
@@ -153,7 +167,8 @@ function CreateMultiBill() {
     if (
       activeProducts.length === 0 ||
       activeProducts.some(
-        (product) => !product.name || product.unitPrice <= 0 || product.amount <= 0
+        (product) =>
+          !product.name || product.unitPrice <= 0 || product.amount <= 0
       )
     ) {
       setErrorProduct("Vui lòng điền đầy đủ thông tin sản phẩm trước khi lưu.");
@@ -170,10 +185,7 @@ function CreateMultiBill() {
         (acc, product) => acc + product.discount * product.amount,
         0
       ),
-      total: activeProducts.reduce(
-        (acc, product) => acc + product.total,
-        0
-      ),
+      total: activeProducts.reduce((acc, product) => acc + product.total, 0),
     };
 
     try {
@@ -230,12 +242,18 @@ function CreateMultiBill() {
 
   const handleAddBill = () => {
     setBill((prevBill) => {
-      const newBillNumber = prevBill.length === 0 ? 1 : prevBill[prevBill.length - 1] + 1;
+      const newBillNumber =
+        prevBill.length === 0 ? 1 : prevBill[prevBill.length - 1] + 1;
 
       // Initialize the retailer and store for the new bill with all required fields
       setBillDetails((prevDetails) => ({
         ...prevDetails,
-        [newBillNumber]: { retailerId: "", storeId: "", stores: [], products: [] } // Đảm bảo có tất cả các thuộc tính
+        [newBillNumber]: {
+          retailerId: "",
+          storeId: "",
+          stores: [],
+          products: [],
+        }, // Đảm bảo có tất cả các thuộc tính
       }));
 
       return [...prevBill, newBillNumber];
@@ -248,7 +266,6 @@ function CreateMultiBill() {
       return newBill.map((_, index) => index + 1);
     });
   };
-
 
   const handleDuplicateBill = (billNumber: number) => {
     setBill((prevBills) => {
@@ -267,7 +284,6 @@ function CreateMultiBill() {
       return [...prevBills, newBillNumber];
     });
   };
-
 
   const handleSelectRetailer = async (value: string) => {
     const newStores = await fetchStoresByRetailerId(value);
@@ -315,7 +331,9 @@ function CreateMultiBill() {
     fetchRetailers();
   }, []);
 
-  const fetchStoresByRetailerId = async (retailerId: string): Promise<Store[]> => {
+  const fetchStoresByRetailerId = async (
+    retailerId: string
+  ): Promise<Store[]> => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.get(
@@ -461,12 +479,8 @@ function CreateMultiBill() {
                     <TableHead className="w-2/12 text-white rounded-tl-lg">
                       Tên sản phẩm
                     </TableHead>
-                    <TableHead className="w-2/12 text-white">
-                      Sku
-                    </TableHead>
-                    <TableHead className="w-2/12 text-white">
-                      Đơn giá
-                    </TableHead>
+                    <TableHead className="w-2/12 text-white">Sku</TableHead>
+                    <TableHead className="w-2/12 text-white">Đơn giá</TableHead>
                     <TableHead className="w-2/12 text-white">
                       Số lượng
                     </TableHead>
@@ -476,8 +490,7 @@ function CreateMultiBill() {
                     <TableHead className="w-2/12 text-white">
                       Thành tiền
                     </TableHead>
-                    <TableHead className=" text-white rounded-tr-lg">
-                    </TableHead>
+                    <TableHead className=" text-white rounded-tr-lg"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -556,7 +569,10 @@ function CreateMultiBill() {
                           placeholder="Giảm giá"
                         />
                       </TableCell>
-                      <TableCell>{product.total.toFixed(2)}</TableCell>
+                      <TableCell className="text-lg">
+                        {product.total}{"  "}
+                        <span className="font-semibold text-xs">VNĐ</span>
+                      </TableCell>
                       <TableCell>
                         <Trash2
                           onClick={() => removeProduct(index)}
@@ -570,21 +586,20 @@ function CreateMultiBill() {
                   <TableRow>
                     <TableCell colSpan={5}>Tổng giảm giá</TableCell>
                     <TableCell className="text-right">
-                      {activeProducts
-                        .reduce(
-                          (acc, product) =>
-                            acc + product.discount * product.amount,
-                          0
-                        )
-                        .toFixed(2)}
+                      {activeProducts.reduce(
+                        (acc, product) =>
+                          acc + product.discount * product.amount,
+                        0
+                      )}
                     </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell colSpan={5}>Thành tiền</TableCell>
                     <TableCell className="text-right">
-                      {activeProducts
-                        .reduce((acc, product) => acc + product.total, 0)
-                        .toFixed(2)}
+                      {activeProducts.reduce(
+                        (acc, product) => acc + product.total,
+                        0
+                      )}
                     </TableCell>
                   </TableRow>
                 </TableFooter>
@@ -626,7 +641,9 @@ function CreateMultiBill() {
               ) : (
                 <div className="flex items-center justify-center mt-3">
                   <ScanQrCode
-                    className={`w-[100%] h-[100%] mt-3 ${loading ? "animate-colorChange" : "text-black"}`}
+                    className={`w-[100%] h-[100%] mt-3 ${
+                      loading ? "animate-colorChange" : "text-black"
+                    }`}
                   />
                 </div>
               )}

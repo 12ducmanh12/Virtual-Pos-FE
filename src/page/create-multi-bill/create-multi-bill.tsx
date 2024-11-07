@@ -388,7 +388,7 @@ function CreateMultiBill() {
       </div>
       <div className="flex justify-between">
         <div className="w-2/12 flex flex-col rounded-lg">
-          {bill.map((item) => (
+          {bill?.map((item) => (
             <ItemBill
               key={item}
               billNumber={item}
@@ -416,7 +416,7 @@ function CreateMultiBill() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {retailers.map((retailer) => (
+                        {retailers?.map((retailer) => (
                           <SelectItem
                             key={retailer.retailerId}
                             value={retailer.retailerId.toString()}
@@ -438,7 +438,7 @@ function CreateMultiBill() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {activeBillDetails.stores.map((store) => (
+                        {activeBillDetails?.stores?.map((store) => (
                           <SelectItem
                             key={store.storeId}
                             value={store.storeId.toString()} // Sử dụng storeId

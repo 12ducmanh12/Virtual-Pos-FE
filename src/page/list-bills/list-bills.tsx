@@ -22,16 +22,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import DeleteModal from "./components/delete-modal";
+import DuplicateModal from "./components/duplicate-modal";
+import CreateUserModal from "./components/create-user-modal";
 
 interface productsType {
   productId: number;
@@ -74,11 +68,6 @@ function ListBills() {
     setUsername("");
     setPassword("");
     setTypeUser(1);
-  };
-
-  const handleCreateUser = () => {
-    createUser(username, password, typeUser);
-    handleCloseCreateUserModal();
   };
 
   const openDuplicateModal = (billId: number) => {
@@ -142,7 +131,7 @@ function ListBills() {
     try {
       const token = localStorage.getItem("token");
       console.log(token);
-      await axios.get(`https://vpos.giftzone.vn/api/bill/duplicate/${billId}`, {
+      await axios.get(`http://localhost:5281/api/bill/duplicate/${billId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -154,7 +143,7 @@ function ListBills() {
     }
   };
 
-  const createUser = async (
+  const handleCreateUser = async (
     username: string,
     password: string,
     typeUser: number
@@ -375,98 +364,36 @@ function ListBills() {
           </TableBody>
         </Table>
       </div>
-      {isDeleteModalOpen && (
-        <div onClick={() => setIsDeleteModalOpen(false)} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
-            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-            <p className="text-sm font-semibold">
-              Are you sure want to delete this bill?
-            </p>
-            <div className="flex justify-end mt-6 space-x-4">
-              <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  deleteBill(billIdToDelete);
-                  setIsDeleteModalOpen(false);
-                }}
-              >
-                Confirm Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {isDuplicateModalOpen && (
-        <div onClick={() => setIsDuplicateModalOpen(false)} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
-            <h3 className="text-lg font-semibold mb-4">Confirm Duplicate</h3>
-            <p className="text-sm font-semibold">
-              Are you sure want to duplicate this bill?
-            </p>
-            <div className="flex justify-end mt-6 space-x-4">
-              <Button variant="outline" onClick={() => setIsDuplicateModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  duplicateBill(billIdToDuplicate);
-                  setIsDuplicateModalOpen(false);
-                }}
-              >
-                Confirm Duplicate
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={() => {
+          deleteBill(billIdToDelete);
+          setIsDeleteModalOpen(false);
+        }}
+      />
 
-      {isCreateUserModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w-80">
-            <h2 className="text-lg font-semibold mb-4">Tạo Người Dùng</h2>
-            <div className="mb-2">
-              <Input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div className="mb-2">
-              <Input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div className="mb-2">
-              <Select
-                value={typeUser.toString()}
-                onValueChange={(value) => setTypeUser(Number(value))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Chọn loại người dùng" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="0">Admin</SelectItem>
-                    <SelectItem value="1">User</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-around gap-2 mt-4">
-              <Button onClick={handleCloseCreateUserModal}>Hủy</Button>
-              <Button onClick={handleCreateUser}>Xác Nhận</Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DuplicateModal
+        isOpen={isDuplicateModalOpen}
+        onClose={() => setIsDuplicateModalOpen(false)}
+        onConfirm={() => {
+          duplicateBill(billIdToDuplicate);
+          setIsDuplicateModalOpen(false);
+        }}
+      />
+
+      <CreateUserModal
+        isOpen={isCreateUserModalOpen}
+        onClose={handleCloseCreateUserModal}
+        onSubmit={handleCreateUser}
+        username={username}
+        setUsername={setUsername}
+        password={password}
+        setPassword={setPassword}
+        typeUser={typeUser}
+        setTypeUser={setTypeUser}
+      />
       <Toaster />
     </Container>
   );

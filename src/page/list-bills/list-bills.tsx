@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import axios from "axios";
-import { ChevronDown, ChevronRight, ScanQrCode, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, ScanQrCode, Copy, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
@@ -22,16 +22,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import DeleteModal from "./components/delete-modal";
+import DuplicateModal from "./components/duplicate-modal";
+import CreateUserModal from "./components/create-user-modal";
 
 interface productsType {
   productId: number;
@@ -51,9 +45,11 @@ interface dataBillType {
 function ListBills() {
   const [data, setData] = useState<dataBillType[]>([]);
   const [expandedBillIds, setExpandedBillIds] = useState<number[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [billIdToDelete, setBillIdToDelete] = useState<number | null>(null);
+  const [billIdToDuplicate, setBillIdToDuplicate] = useState<number | null>(null);
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -61,31 +57,32 @@ function ListBills() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const handleOpenModal = () => {
+  const handleOpenCreateUserModal = () => {
     setIsCreateUserModalOpen(true);
     setUsername("");
     setPassword("");
     setTypeUser(1);
   };
-  const handleCloseModal = () => {
+  const handleCloseCreateUserModal = () => {
     setIsCreateUserModalOpen(false);
     setUsername("");
     setPassword("");
     setTypeUser(1);
   };
 
-  const handleCreateUser = () => {
-    createUser(username, password, typeUser);
-    handleCloseModal();
+  const openDuplicateModal = (billId: number) => {
+    setBillIdToDuplicate(billId);
+    setIsDuplicateModalOpen(true);
   };
 
   const openDeleteModal = (billId: number) => {
     setBillIdToDelete(billId);
-    setIsModalOpen(true);
+    setIsDeleteModalOpen(true);
   };
 
-  useEffect(() => {
+  const fetchBills = () => {
     const token = localStorage.getItem("token");
+    setLoading(true);
     axios
       .get(`${baseUrl}/api/bill/get-all-bill`, {
         headers: {
@@ -100,6 +97,10 @@ function ListBills() {
         console.error("Error:", error);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchBills();
   }, []);
 
   const toggleExpand = (billId: number) => {
@@ -125,7 +126,24 @@ function ListBills() {
     }
   };
 
-  const createUser = async (
+  const duplicateBill = async (billId: number | null) => {
+    if (!billId) return;
+    try {
+      const token = localStorage.getItem("token");
+      console.log(token);
+      await axios.get(`http://localhost:5281/api/bill/duplicate/${billId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      // Gọi lại fetchBills để cập nhật danh sách sau khi duplicate thành công
+      fetchBills();
+    } catch (error) {
+      console.error("Duplicate error:", error);
+    }
+  };
+
+  const handleCreateUser = async (
     username: string,
     password: string,
     typeUser: number
@@ -167,7 +185,7 @@ function ListBills() {
     <Container>
       <div className="flex justify-end gap-5">
         {localStorage.getItem("typeUser") === "0" && (
-          <Button className="w-fit" onClick={handleOpenModal}>
+          <Button className="w-fit" onClick={handleOpenCreateUserModal}>
             Tạo Người Dùng
           </Button>
         )}
@@ -252,6 +270,10 @@ function ListBills() {
                             <p className="text-sm">QR Code</p>
                           </Button>
                         </PopoverTrigger>
+                        <Copy
+                          onClick={() => openDuplicateModal(invoice.billId)}
+                          className="cursor-pointer text-black hover:text-green-700 ml-7"
+                        />
                         <Trash2
                           onClick={() => openDeleteModal(invoice.billId)}
                           className="cursor-pointer text-black hover:text-red-700 ml-7"
@@ -342,74 +364,36 @@ function ListBills() {
           </TableBody>
         </Table>
       </div>
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
-            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-            <p className="text-sm font-semibold">
-              Are you sure want to delete this bill?
-            </p>
-            <div className="flex justify-end mt-6 space-x-4">
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  deleteBill(billIdToDelete); // Call the delete function
-                  setIsModalOpen(false);
-                }}
-              >
-                Confirm Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {isCreateUserModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w-80">
-            <h2 className="text-lg font-semibold mb-4">Tạo Người Dùng</h2>
-            <div className="mb-2">
-              <Input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div className="mb-2">
-              <Input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div className="mb-2">
-              <Select
-                value={typeUser.toString()}
-                onValueChange={(value) => setTypeUser(Number(value))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Chọn loại người dùng" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="0">Admin</SelectItem>
-                    <SelectItem value="1">User</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-around gap-2 mt-4">
-              <Button onClick={handleCloseModal}>Hủy</Button>
-              <Button onClick={handleCreateUser}>Xác Nhận</Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={() => {
+          deleteBill(billIdToDelete);
+          setIsDeleteModalOpen(false);
+        }}
+      />
+
+      <DuplicateModal
+        isOpen={isDuplicateModalOpen}
+        onClose={() => setIsDuplicateModalOpen(false)}
+        onConfirm={() => {
+          duplicateBill(billIdToDuplicate);
+          setIsDuplicateModalOpen(false);
+        }}
+      />
+
+      <CreateUserModal
+        isOpen={isCreateUserModalOpen}
+        onClose={handleCloseCreateUserModal}
+        onSubmit={handleCreateUser}
+        username={username}
+        setUsername={setUsername}
+        password={password}
+        setPassword={setPassword}
+        typeUser={typeUser}
+        setTypeUser={setTypeUser}
+      />
       <Toaster />
     </Container>
   );

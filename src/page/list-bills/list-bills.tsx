@@ -8,7 +8,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import axios from "axios";
-import { ChevronDown, ChevronRight, ScanQrCode, Copy, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ScanQrCode,
+  Copy,
+  Trash2,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
@@ -44,7 +50,9 @@ function ListBills() {
   const [data, setData] = useState<dataBillType[]>([]);
   const [expandedBillIds, setExpandedBillIds] = useState<number[]>([]);
   const [billIdToDelete, setBillIdToDelete] = useState<number | null>(null);
-  const [billIdToDuplicate, setBillIdToDuplicate] = useState<number | null>(null);
+  const [billIdToDuplicate, setBillIdToDuplicate] = useState<number | null>(
+    null
+  );
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -111,13 +119,11 @@ function ListBills() {
     if (!billId) return;
     try {
       const token = localStorage.getItem("token");
-      console.log(token);
       await axios.get(`${baseUrl}/api/bill/duplicate/${billId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      // Gọi lại fetchBills để cập nhật danh sách sau khi duplicate thành công
       fetchBills();
     } catch (error) {
       console.error("Duplicate error:", error);
@@ -125,32 +131,36 @@ function ListBills() {
   };
   return (
     <Container>
-       <h2 className="mt-12 flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
+      <h2 className="mt-12 flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
         Danh Sách Hóa Đơn
       </h2>
       <div className="flex justify-end">
-        <Button className=" mb-4" onClick={() => navigate("/create-multi-bill")}>
-        Tạo Hóa Đơn
-      </Button>
+        <Button
+          className=" mb-4"
+          onClick={() => navigate("/create-multi-bill")}
+        >
+          Tạo Hóa Đơn
+        </Button>
       </div>
-      
+
       <div className="rounded-lg shadow-xl rounded-r-lg">
         <Table className="relative">
           <TableHeader className="bg-gradient-custom text-white ">
             <TableRow className=" rounded-lg">
-              <TableHead className="w-[3%] text-white text-center font-bold rounded-tl-lg"></TableHead>
-              <TableHead className="w-2/12 text-white text-left font-bold">
+              <TableHead className="w-[3%] rounded-tl-lg"></TableHead>
+              <TableHead className="w-3/12 text-white text-left font-bold">
                 Bill Id
               </TableHead>
               <TableHead className="w-3/12 text-white text-center font-bold">
                 Tên cửa hàng
               </TableHead>
-              <TableHead className="w-3/12 text-white text-center font-bold">
+              <TableHead className="w-2/12 text-white text-center font-bold">
                 Tổng tiền
               </TableHead>
-              <TableHead className="w-3/12 text-white text-center font-bold rounded-tr-lg">
+              <TableHead className="w-3/12 text-white text-center font-bold">
                 Qr Code
               </TableHead>
+              <TableHead className=" rounded-tr-lg"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -159,6 +169,9 @@ function ListBills() {
                 <TableCell></TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-[200px] text-left my-4" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
@@ -194,24 +207,14 @@ function ListBills() {
                     {invoice.storeName}
                   </TableCell>
                   <TableCell className="text-center">{invoice.total}</TableCell>
-                  <TableCell className="flex justify-center relative">
+                  <TableCell className="flex justify-center">
                     <Popover>
-                      <div className="flex justify-between items-center">
-                        <PopoverTrigger asChild>
-                          <Button variant="outline">
-                            <ScanQrCode />
-                            <p className="text-sm">QR Code</p>
-                          </Button>
-                        </PopoverTrigger>
-                        <Copy
-                          onClick={() => openDuplicateModal(invoice.billId)}
-                          className="cursor-pointer text-black hover:text-green-700 ml-7"
-                        />
-                        <Trash2
-                          onClick={() => openDeleteModal(invoice.billId)}
-                          className="cursor-pointer text-black hover:text-red-700 ml-7"
-                        />
-                      </div>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline">
+                          <ScanQrCode />
+                          <p className="text-sm">QR Code</p>
+                        </Button>
+                      </PopoverTrigger>
                       <PopoverContent className="w-60">
                         <QRCode
                           size={150}
@@ -240,6 +243,18 @@ function ListBills() {
                         </div>
                       </PopoverContent>
                     </Popover>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-between items-center mr-4">
+                      <Copy
+                        onClick={() => openDuplicateModal(invoice.billId)}
+                        className="cursor-pointer text-black hover:text-green-700"
+                      />
+                      <Trash2
+                        onClick={() => openDeleteModal(invoice.billId)}
+                        className="cursor-pointer text-black hover:text-red-700 ml-7"
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
 

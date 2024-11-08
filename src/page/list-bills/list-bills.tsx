@@ -8,18 +8,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import axios from "axios";
-import { ChevronDown, ChevronRight, ScanQrCode } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ScanQrCode,
+  Copy,
+  Trash2,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import { Button } from "@/components/ui/button";
 import { baseUrl } from "@/constants/constant";
 import { webHddtUrl } from "@/constants/constant";
+import { Toaster } from "@/components/ui/toaster";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
+import DeleteModal from "./components/delete-modal";
+import DuplicateModal from "./components/duplicate-modal";
 
 interface productsType {
   productId: number;
@@ -33,65 +43,147 @@ interface dataBillType {
   billId: number;
   storeName: string;
   total: number;
+  maEinvoice: string;
   products: Array<productsType>;
 }
 function ListBills() {
   const [data, setData] = useState<dataBillType[]>([]);
   const [expandedBillIds, setExpandedBillIds] = useState<number[]>([]);
+  const [billIdToDelete, setBillIdToDelete] = useState<number | null>(null);
+  const [billIdToDuplicate, setBillIdToDuplicate] = useState<number | null>(
+    null
+  );
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
-  useEffect(() => {
+
+  const openDuplicateModal = (billId: number) => {
+    setBillIdToDuplicate(billId);
+    setIsDuplicateModalOpen(true);
+  };
+
+  const openDeleteModal = (billId: number) => {
+    setBillIdToDelete(billId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const fetchBills = () => {
+    const token = localStorage.getItem("token");
+    setLoading(true);
     axios
-      .get(`${baseUrl}/api/all-bill`)
+      .get(`${baseUrl}/api/bill/get-all-bill`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((response) => {
         setData(response.data);
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Error:", error);
+        setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchBills();
   }, []);
+
   const toggleExpand = (billId: number) => {
     if (expandedBillIds.includes(billId)) {
-      // Nếu billId đã có trong mảng thì xóa nó đi (đóng bảng)
       setExpandedBillIds(expandedBillIds.filter((id) => id !== billId));
     } else {
-      // Nếu billId chưa có trong mảng thì thêm vào (mở bảng)
       setExpandedBillIds([...expandedBillIds, billId]);
     }
   };
 
+  const deleteBill = async (billId: number | null) => {
+    if (!billId) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${baseUrl}/api/bill/delete/${billId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setData(data.filter((bill) => bill.billId !== billId)); // Update the UI
+    } catch (error) {
+      console.error("Delete error:", error);
+    }
+  };
+
+  const duplicateBill = async (billId: number | null) => {
+    if (!billId) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.get(`${baseUrl}/api/bill/duplicate/${billId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      fetchBills();
+    } catch (error) {
+      console.error("Duplicate error:", error);
+    }
+  };
   return (
     <Container>
-      <div className="flex items-baseline justify-center">
-        <h2 className="flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
-          Danh Sách Hóa Đơn
-        </h2>
+      <h2 className="mt-12 flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
+        Danh Sách Hóa Đơn
+      </h2>
+      <div className="flex justify-end">
         <Button
-          className="ml-auto w-fit my-10"
+          className=" mb-4"
           onClick={() => navigate("/create-multi-bill")}
         >
-          Tạo Bill
+          Tạo Hóa Đơn
         </Button>
       </div>
+
       <div className="rounded-lg shadow-xl rounded-r-lg">
         <Table className="relative">
           <TableHeader className="bg-gradient-custom text-white ">
             <TableRow className=" rounded-lg">
-              <TableHead className="w-[3%] text-white text-center font-bold rounded-tl-lg"></TableHead>
-              <TableHead className="w-2/12 text-white text-left font-bold">
+              <TableHead className="w-[3%] rounded-tl-lg"></TableHead>
+              <TableHead className="w-3/12 text-white text-left font-bold">
                 Bill Id
               </TableHead>
               <TableHead className="w-3/12 text-white text-center font-bold">
                 Tên cửa hàng
               </TableHead>
-              <TableHead className="w-3/12 text-white text-center font-bold">
+              <TableHead className="w-2/12 text-white text-center font-bold">
                 Tổng tiền
               </TableHead>
-              <TableHead className="w-3/12 text-white text-center font-bold rounded-tr-lg">
+              <TableHead className="w-3/12 text-white text-center font-bold">
                 Qr Code
               </TableHead>
+              <TableHead className=" rounded-tr-lg"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
+            {loading && (
+              <TableRow>
+                <TableCell></TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] text-left my-4" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
+                </TableCell>
+              </TableRow>
+            )}
             {data?.map((invoice) => (
               <React.Fragment key={invoice.billId}>
                 <TableRow>
@@ -115,7 +207,7 @@ function ListBills() {
                     {invoice.storeName}
                   </TableCell>
                   <TableCell className="text-center">{invoice.total}</TableCell>
-                  <TableCell className="flex justify-center relative">
+                  <TableCell className="flex justify-center">
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline">
@@ -151,6 +243,18 @@ function ListBills() {
                         </div>
                       </PopoverContent>
                     </Popover>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-between items-center mr-4">
+                      <Copy
+                        onClick={() => openDuplicateModal(invoice.billId)}
+                        className="cursor-pointer text-black hover:text-green-700"
+                      />
+                      <Trash2
+                        onClick={() => openDeleteModal(invoice.billId)}
+                        className="cursor-pointer text-black hover:text-red-700 ml-7"
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
 
@@ -208,6 +312,25 @@ function ListBills() {
           </TableBody>
         </Table>
       </div>
+
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={() => {
+          deleteBill(billIdToDelete);
+          setIsDeleteModalOpen(false);
+        }}
+      />
+
+      <DuplicateModal
+        isOpen={isDuplicateModalOpen}
+        onClose={() => setIsDuplicateModalOpen(false)}
+        onConfirm={() => {
+          duplicateBill(billIdToDuplicate);
+          setIsDuplicateModalOpen(false);
+        }}
+      />
+      <Toaster />
     </Container>
   );
 }

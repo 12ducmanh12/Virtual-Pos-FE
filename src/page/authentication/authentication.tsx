@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/hooks/authStore";
 import { baseUrl } from "@/constants/constant";
+import { LoaderCircle } from "lucide-react";
 import "./style.css";
 
 function Authentication() {
@@ -16,7 +17,7 @@ function Authentication() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuthStore();
-  console.log(baseUrl);
+  const [loading, setLoading] = useState(false);
   const toggleForm = () => {
     setIsSignIn(!isSignIn);
     setError("");
@@ -26,6 +27,7 @@ function Authentication() {
     e.preventDefault();
     if (password !== confirmPassword) {
       toast({
+        variant: "error",
         title: "Error",
         description: "Passwords do not match",
       });
@@ -34,6 +36,7 @@ function Authentication() {
 
   const handleSignInSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await fetch(`${baseUrl}/api/user/login`, {
         method: "POST",
@@ -51,26 +54,30 @@ function Authentication() {
         throw new Error(errorData.message || "Login failed");
       }
 
-      const { token, refreshToken, expiration } = await response.json();
+      const { token, expiration, typeUser } = await response.json();
 
       localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("expiration", expiration);
+      localStorage.setItem("typeUser", typeUser);
 
       setIsAuthenticated(true);
       navigate("/");
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       toast({
+        variant: "error",
         title: "Login Failed",
         description: "Username or Password incorrect",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="bg-custom flex justify-center items-center min-h-screen">
       <div
-        className={`p-8 space-y-6 w-4/12 bg-white rounded-lg shadow-md items-baseline transition-height
+        className={`p-8 space-y-6 xl:w-4/12 lg:w-8/12 sm:w-[95%] w-[95%] bg-white rounded-lg shadow-md items-baseline transition-height
                     ${isSignIn ? "signin-height" : "signup-height"}`}
       >
         <h2
@@ -113,7 +120,11 @@ function Authentication() {
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <Button type="submit" className="w-full button-gradient">
-              Sign In
+              {loading ? (
+                <LoaderCircle className="animate-spin h-5 w-5 text-white" />
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </form>
         </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import CreateUserModal from "./create-user-modal";
 import { toast } from "@/hooks/use-toast";
+import logo from "@/assets/logo.jpeg"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -100,27 +101,30 @@ const Navbar: React.FC = () => {
 
     return (
         <>
-            <nav
-                className={`fixed z-10 top-0 left-0 w-full bg-[#ffffff99] backdrop-blur-md shadow-lg transition-transform duration-300 ${showNavbar ? "translate-y-0" : "-translate-y-full"
-                    }`}
-            >
-                <div className="flex justify-end mr-3">
-                    <DropdownMenu >
-                        <DropdownMenuTrigger className="px-3 py-2 bg-transparent">
-                            <Avatar>
-                                <AvatarImage src="https://github.com/shadcn.png" />
-                                <AvatarFallback>CN</AvatarFallback>
-                            </Avatar>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {localStorage.getItem("typeUser") === "0" && (
-                                <DropdownMenuItem onClick={handleOpenCreateUserModal}>Create Acount</DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+            <nav className={`fixed z-10 top-0 left-0 w-full bg-[#ffffff99] backdrop-blur-md shadow-lg transition-transform duration-300 ${showNavbar ? "translate-y-0" : "-translate-y-full"}`}>
+                <div className="flex justify-between items-center px-4 py-2">
+                    <div className="flex items-center">
+                        <img src={logo} alt="Logo" className="h-8" />
+                    </div>
+
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="px-3 py-2 bg-transparent">
+                                <Avatar>
+                                    <AvatarImage src="https://github.com/shadcn.png" />
+                                    <AvatarFallback>CN</AvatarFallback>
+                                </Avatar>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {localStorage.getItem("typeUser") === "0" && (
+                                    <DropdownMenuItem onClick={handleOpenCreateUserModal}>Create Account</DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
             </nav>
 

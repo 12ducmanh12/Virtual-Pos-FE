@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { baseUrl } from "@/constants/constant";
 import { webHddtUrl } from "@/constants/constant";
 import { Toaster } from "@/components/ui/toaster";
-import { useToast } from "@/hooks/use-toast";
 import {
   Popover,
   PopoverContent,
@@ -25,7 +24,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import DeleteModal from "./components/delete-modal";
 import DuplicateModal from "./components/duplicate-modal";
-import CreateUserModal from "./components/create-user-modal";
 
 interface productsType {
   productId: number;
@@ -47,28 +45,11 @@ function ListBills() {
   const [expandedBillIds, setExpandedBillIds] = useState<number[]>([]);
   const [billIdToDelete, setBillIdToDelete] = useState<number | null>(null);
   const [billIdToDuplicate, setBillIdToDuplicate] = useState<number | null>(null);
-  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const { toast } = useToast();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [typeUser, setTypeUser] = useState(1);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
-  const handleOpenCreateUserModal = () => {
-    setIsCreateUserModalOpen(true);
-    setUsername("");
-    setPassword("");
-    setTypeUser(1);
-  };
-  const handleCloseCreateUserModal = () => {
-    setIsCreateUserModalOpen(false);
-    setUsername("");
-    setPassword("");
-    setTypeUser(1);
-  };
+  const navigate = useNavigate();
 
   const openDuplicateModal = (billId: number) => {
     setBillIdToDuplicate(billId);
@@ -142,65 +123,17 @@ function ListBills() {
       console.error("Duplicate error:", error);
     }
   };
-
-  const handleCreateUser = async (
-    username: string,
-    password: string,
-    typeUser: number
-  ) => {
-    try {
-      const token = localStorage.getItem("token");
-
-      await axios.post(
-        `${baseUrl}/api/user/create`,
-        { username, password, typeUser },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      toast({
-        variant: "success",
-        description: "User created successfully",
-      });
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        const errorMessage = error.response.data || "An error occurred";
-        toast({
-          variant: "error",
-          description: errorMessage,
-        });
-      } else {
-        toast({
-          variant: "error",
-          description: "An unknown error occurred",
-        });
-      }
-    }
-  };
-
   return (
     <Container>
-      <div className="flex justify-end gap-5">
-        {localStorage.getItem("typeUser") === "0" && (
-          <Button className="w-fit" onClick={handleOpenCreateUserModal}>
-            Tạo Người Dùng
-          </Button>
-        )}
-        <Button
-          className="w-fit"
-          onClick={() => navigate("/create-multi-bill")}
-        >
-          Tạo Hóa Đơn
-        </Button>
+       <h2 className="mt-12 flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
+        Danh Sách Hóa Đơn
+      </h2>
+      <div className="flex justify-end">
+        <Button className=" mb-4" onClick={() => navigate("/create-multi-bill")}>
+        Tạo Hóa Đơn
+      </Button>
       </div>
-      <div className="flex items-center justify-center my-5">
-        <h2 className="flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
-          Danh Sách Hóa Đơn
-        </h2>
-      </div>
+      
       <div className="rounded-lg shadow-xl rounded-r-lg">
         <Table className="relative">
           <TableHeader className="bg-gradient-custom text-white ">
@@ -381,18 +314,6 @@ function ListBills() {
           duplicateBill(billIdToDuplicate);
           setIsDuplicateModalOpen(false);
         }}
-      />
-
-      <CreateUserModal
-        isOpen={isCreateUserModalOpen}
-        onClose={handleCloseCreateUserModal}
-        onSubmit={handleCreateUser}
-        username={username}
-        setUsername={setUsername}
-        password={password}
-        setPassword={setPassword}
-        typeUser={typeUser}
-        setTypeUser={setTypeUser}
       />
       <Toaster />
     </Container>

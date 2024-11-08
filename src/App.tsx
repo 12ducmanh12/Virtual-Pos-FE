@@ -19,7 +19,6 @@ const App: React.FC = () => {
       if (!isTokenExpired) {
         setIsAuthenticated(true);
       } else {
-        // Xóa token nếu đã hết hạn
         localStorage.removeItem("token");
         localStorage.removeItem("expiration");
         setIsAuthenticated(false);
@@ -29,28 +28,27 @@ const App: React.FC = () => {
     }
   }, [setIsAuthenticated]);
 
-  const isAuthenticationPage = location.pathname === "/login";
-
   return (
     <BrowserRouter>
-      {!isAuthenticationPage && <Navbar/>}
       <Routes>
-        {routes.map((route) => (
-          <Route
-            key={route.key}
-            path={route.route}
-            element={
-              route.isProtected ? (
-                <ProtectedRoute
-                  element={route.component}
-                  isAuthenticated={isAuthenticated}
-                />
-              ) : (
-                route.component
-              )
-            }
-          />
-        ))}
+        <Route path="/" element={isAuthenticated ? <Navbar /> : null}>
+          {routes.map((route) => (
+            <Route
+              key={route.key}
+              path={route.route}
+              element={
+                route.isProtected ? (
+                  <ProtectedRoute
+                    element={route.component}
+                    isAuthenticated={isAuthenticated}
+                  />
+                ) : (
+                  route.component
+                )
+              }
+            />
+          ))}
+        </Route>
       </Routes>
     </BrowserRouter>
   );

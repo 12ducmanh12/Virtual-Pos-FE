@@ -8,7 +8,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import axios from "axios";
-import { ChevronDown, ChevronRight, ScanQrCode, Copy, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ScanQrCode,
+  Copy,
+  Trash2,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
@@ -16,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { baseUrl } from "@/constants/constant";
 import { webHddtUrl } from "@/constants/constant";
 import { Toaster } from "@/components/ui/toaster";
-import { useToast } from "@/hooks/use-toast";
 import {
   Popover,
   PopoverContent,
@@ -25,7 +30,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import DeleteModal from "./components/delete-modal";
 import DuplicateModal from "./components/duplicate-modal";
-import CreateUserModal from "./components/create-user-modal";
 
 interface productsType {
   productId: number;
@@ -46,29 +50,14 @@ function ListBills() {
   const [data, setData] = useState<dataBillType[]>([]);
   const [expandedBillIds, setExpandedBillIds] = useState<number[]>([]);
   const [billIdToDelete, setBillIdToDelete] = useState<number | null>(null);
-  const [billIdToDuplicate, setBillIdToDuplicate] = useState<number | null>(null);
-  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
+  const [billIdToDuplicate, setBillIdToDuplicate] = useState<number | null>(
+    null
+  );
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const { toast } = useToast();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [typeUser, setTypeUser] = useState(1);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
-  const handleOpenCreateUserModal = () => {
-    setIsCreateUserModalOpen(true);
-    setUsername("");
-    setPassword("");
-    setTypeUser(1);
-  };
-  const handleCloseCreateUserModal = () => {
-    setIsCreateUserModalOpen(false);
-    setUsername("");
-    setPassword("");
-    setTypeUser(1);
-  };
+  const navigate = useNavigate();
 
   const openDuplicateModal = (billId: number) => {
     setBillIdToDuplicate(billId);
@@ -130,94 +119,48 @@ function ListBills() {
     if (!billId) return;
     try {
       const token = localStorage.getItem("token");
-      console.log(token);
       await axios.get(`${baseUrl}/api/bill/duplicate/${billId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      // Gọi lại fetchBills để cập nhật danh sách sau khi duplicate thành công
       fetchBills();
     } catch (error) {
       console.error("Duplicate error:", error);
     }
   };
-
-  const handleCreateUser = async (
-    username: string,
-    password: string,
-    typeUser: number
-  ) => {
-    try {
-      const token = localStorage.getItem("token");
-
-      await axios.post(
-        `${baseUrl}/api/user/create`,
-        { username, password, typeUser },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      toast({
-        variant: "success",
-        description: "User created successfully",
-      });
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        const errorMessage = error.response.data || "An error occurred";
-        toast({
-          variant: "error",
-          description: errorMessage,
-        });
-      } else {
-        toast({
-          variant: "error",
-          description: "An unknown error occurred",
-        });
-      }
-    }
-  };
-
   return (
     <Container>
-      <div className="flex justify-end gap-5">
-        {localStorage.getItem("typeUser") === "0" && (
-          <Button className="w-fit" onClick={handleOpenCreateUserModal}>
-            Tạo Người Dùng
-          </Button>
-        )}
+      <h2 className="mt-12 flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
+        Danh Sách Hóa Đơn
+      </h2>
+      <div className="flex justify-end">
         <Button
-          className="w-fit"
+          className=" mb-4"
           onClick={() => navigate("/create-multi-bill")}
         >
           Tạo Hóa Đơn
         </Button>
       </div>
-      <div className="flex items-center justify-center my-5">
-        <h2 className="flex-grow text-center bg-gradient-to-r from-[#F21472] to-[#6C24F6] bg-clip-text text-transparent font-bold">
-          Danh Sách Hóa Đơn
-        </h2>
-      </div>
+
       <div className="rounded-lg shadow-xl rounded-r-lg">
         <Table className="relative">
           <TableHeader className="bg-gradient-custom text-white ">
             <TableRow className=" rounded-lg">
-              <TableHead className="w-[3%] text-white text-center font-bold rounded-tl-lg"></TableHead>
-              <TableHead className="w-2/12 text-white text-left font-bold">
+              <TableHead className="w-[3%] rounded-tl-lg"></TableHead>
+              <TableHead className="w-3/12 text-white text-left font-bold">
                 Bill Id
               </TableHead>
               <TableHead className="w-3/12 text-white text-center font-bold">
                 Tên cửa hàng
               </TableHead>
-              <TableHead className="w-3/12 text-white text-center font-bold">
+              <TableHead className="w-2/12 text-white text-center font-bold">
                 Tổng tiền
               </TableHead>
-              <TableHead className="w-3/12 text-white text-center font-bold rounded-tr-lg">
+              <TableHead className="w-3/12 text-white text-center font-bold">
                 Qr Code
               </TableHead>
+              <TableHead className=" rounded-tr-lg"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -226,6 +169,9 @@ function ListBills() {
                 <TableCell></TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-[200px] text-left my-4" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-[200px] my-4 mx-auto" />
@@ -261,24 +207,14 @@ function ListBills() {
                     {invoice.storeName}
                   </TableCell>
                   <TableCell className="text-center">{invoice.total}</TableCell>
-                  <TableCell className="flex justify-center relative">
+                  <TableCell className="flex justify-center">
                     <Popover>
-                      <div className="flex justify-between items-center">
-                        <PopoverTrigger asChild>
-                          <Button variant="outline">
-                            <ScanQrCode />
-                            <p className="text-sm">QR Code</p>
-                          </Button>
-                        </PopoverTrigger>
-                        <Copy
-                          onClick={() => openDuplicateModal(invoice.billId)}
-                          className="cursor-pointer text-black hover:text-green-700 ml-7"
-                        />
-                        <Trash2
-                          onClick={() => openDeleteModal(invoice.billId)}
-                          className="cursor-pointer text-black hover:text-red-700 ml-7"
-                        />
-                      </div>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline">
+                          <ScanQrCode />
+                          <p className="text-sm">QR Code</p>
+                        </Button>
+                      </PopoverTrigger>
                       <PopoverContent className="w-60">
                         <QRCode
                           size={150}
@@ -307,6 +243,18 @@ function ListBills() {
                         </div>
                       </PopoverContent>
                     </Popover>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-between items-center mr-4">
+                      <Copy
+                        onClick={() => openDuplicateModal(invoice.billId)}
+                        className="cursor-pointer text-black hover:text-green-700"
+                      />
+                      <Trash2
+                        onClick={() => openDeleteModal(invoice.billId)}
+                        className="cursor-pointer text-black hover:text-red-700 ml-7"
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
 
@@ -381,18 +329,6 @@ function ListBills() {
           duplicateBill(billIdToDuplicate);
           setIsDuplicateModalOpen(false);
         }}
-      />
-
-      <CreateUserModal
-        isOpen={isCreateUserModalOpen}
-        onClose={handleCloseCreateUserModal}
-        onSubmit={handleCreateUser}
-        username={username}
-        setUsername={setUsername}
-        password={password}
-        setPassword={setPassword}
-        typeUser={typeUser}
-        setTypeUser={setTypeUser}
       />
       <Toaster />
     </Container>

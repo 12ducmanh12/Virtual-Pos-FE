@@ -77,7 +77,7 @@ function Authentication() {
   return (
     <div className="bg-custom flex justify-center items-center min-h-screen">
       <div
-        className={`p-8 space-y-6 w-4/12 bg-white rounded-lg shadow-md items-baseline transition-height
+        className={`p-8 space-y-6 xl:w-4/12 lg:w-8/12 sm:w-[95%] w-[95%] bg-white rounded-lg shadow-md items-baseline transition-height
                     ${isSignIn ? "signin-height" : "signup-height"}`}
       >
         <h2

@@ -367,8 +367,8 @@ function CreateMultiBill() {
   };
 
   return (
-    <div className="bg-[#f9f0ff] h-screen px-4 py-4 xl:max-w-[1920px] w-full mx-auto xl:px-20">
-      <div className="flex justify-between items-center mb-5">
+    <div className="bg-[#f9f0ff] h-screen px-4 py-4 xl:max-w-[1920px] w-full mx-auto xl:px-20 pt-8">
+      <div className="flex justify-between items-center mt-12">
         <div
           className={`text-white flex cursor-pointer items-center gap-x-2 p-2 rounded-lg border w-fit bg-gradient-custom`}
           onClick={() => navigate("/")}
